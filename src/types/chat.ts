@@ -10,17 +10,27 @@ export interface WsResponse<T = any> {
     event: string;
     data?: T;
     mes?: string;
-}export interface LoginResponseData {
+}
+
+export interface LoginResponseData {
     RE_LOGIN_CODE: string;
 }
+
 export interface UserAuthInfo {
     username: string;
     reLoginCode?: string;
     isAuthenticated: boolean;
-}export interface ConversationItemType {
+}
+
+// Đã bổ sung các trường UI vào thẳng interface gốc
+export interface ConversationItemType {
+    id: string;
     name: string;
     type: 0 | 1;
     actionTime: string;
+    avatar?: string;
+    lastMessage?: string;
+    isOnline?: boolean;
 }
 
 export interface ChatMessageType {
