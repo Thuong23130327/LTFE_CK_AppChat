@@ -1,0 +1,39 @@
+/* Chỉ xử lý cuộn cho vùng danh sách hội thoại */
+.conversation-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.conversation-list::-webkit-scrollbar {
+    width: 6px;
+}
+.conversation-list::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 4px;
+}
+
+/* CSS cho từng dòng hội thoại */
+.conversation-item {
+    display: flex;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.conversation-item:hover {
+    background-color: #f5f6f8;
+}
+
+.conversation-item.active {
+    background-color: #e5effa;
+}
+
+.avatar-container { margin-right: 12px; }
+.avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+.avatar-small { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; margin-right: 8px; vertical-align: middle; }
+
+.conversation-info { flex: 1; overflow: hidden; }
+.conversation-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.name { font-weight: 600; font-size: 15px; }
+.time { font-size: 12px; color: #888; }
+.last-message { font-size: 13px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
