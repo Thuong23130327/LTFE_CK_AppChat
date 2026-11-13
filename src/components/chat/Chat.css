@@ -1,0 +1,350 @@
+/* bố cục khung chat bên phải (3 phần: header, MessageList, input) */
+
+.chat-area {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  background-color: #f8f9fa;
+  box-sizing: border-box;
+}
+
+/* ChatHeader cố định phía trên */
+.chat-header-bar {
+  flex-shrink: 0;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.chat-header-avatar-wrapper {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+}
+
+.chat-header-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e5e7eb;
+}
+
+.chat-header-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #e5effa;
+  color: #0084ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.chat-header-status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  background-color: #9ca3af;
+}
+
+.chat-header-status-dot.online {
+  background-color: #10b981;
+}
+
+.chat-header-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.chat-header-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chat-header-type-icon {
+  font-size: 15px;
+  color: #6b7280;
+  display: inline-flex;
+}
+
+.chat-header-status {
+  font-size: 12px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.chat-header-status.online {
+  color: #10b981;
+}
+
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-header-btn {
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.chat-header-btn:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+/* MessageList */
+.message-list-container {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+  background-color: #f8fafc;
+  box-sizing: border-box;
+}
+
+.message-list-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.message-list-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.message-list-container::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+}
+
+.message-list-container::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+.message-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Avatar người gửi */
+.message-sender-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-top: 2px;
+  border: 1px solid #e2e8f0;
+}
+
+.message-sender-avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* nội dung tin nhắn */
+.message-content-group {
+  display: flex;
+  flex-direction: column;
+  max-width: 65%;
+  min-width: 60px;
+}
+
+/* Người gửi */
+.message-header-info {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.message-sender-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.message-time {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.message-bubble {
+  padding: 10px 15px;
+  font-size: 14.5px;
+  line-height: 1.45;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  color: #0f172a;
+  border-radius: 4px 16px 16px 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* ChatInput cố định ở đáy */
+.chat-input-bar {
+  flex-shrink: 0;
+  background-color: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  z-index: 10;
+}
+
+.chat-input-tool-btn {
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.chat-input-tool-btn:hover {
+  background-color: #f3f4f6;
+  color: #0084ff;
+}
+
+.chat-input-field-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background-color: #f3f4f6;
+  border-radius: 22px;
+  padding: 4px 16px;
+  border: 1px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.chat-input-field-wrapper:focus-within {
+  background-color: #ffffff;
+  border-color: #0084ff;
+  box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.15);
+}
+
+.chat-input-control {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14.5px;
+  color: #111827;
+  padding: 8px 0;
+  line-height: 1.4;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.chat-input-control::placeholder {
+  color: #9ca3af;
+}
+
+.chat-send-btn {
+  background-color: #0084ff;
+  color: #ffffff;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  transition: background-color 0.2s, transform 0.1s, opacity 0.2s;
+}
+
+.chat-send-btn:hover:not(:disabled) {
+  background-color: #0073e6;
+  transform: scale(1.05);
+}
+
+.chat-send-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.chat-send-btn:disabled {
+  background-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
