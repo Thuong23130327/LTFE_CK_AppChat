@@ -8,7 +8,7 @@ import {
 
 interface ChatHeaderProps {
   name: string;
-  type?: 0 | 1; // 0: Chat cá nhân, 1: Chat nhóm
+  type?: 0 | 1; // 0 là chat cá nhân, 1 là chat nhóm
   avatar?: string;
   isOnline?: boolean;
 }
@@ -30,7 +30,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               {type === 1 ? <FaUsers /> : <FaUser />}
             </div>
           )}
-          {/* Chấm trạng thái trên avatar */}
+          {/* chấm tròn trạng thái trên avatar */}
           <span
             className={`chat-header-status-dot ${isOnline ? 'online' : ''}`}
             title={isOnline ? 'Đang hoạt động' : 'Offline'}
@@ -45,7 +45,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             <span>{name}</span>
           </div>
 
-          {/* Hiển thị trạng thái ("Đang hoạt động" hoặc "Offline") */}
+          {/* hiển thị trạng thái "Đang hoạt động" hoặc "Offline" */}
           <div className={`chat-header-status ${isOnline ? 'online' : ''}`}>
             {isOnline ? 'Đang hoạt động' : 'Offline'}
           </div>
