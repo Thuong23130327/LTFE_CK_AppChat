@@ -12,7 +12,6 @@
   box-sizing: border-box;
 }
 
-/* ChatHeader cố định phía trên */
 .chat-header-bar {
   flex-shrink: 0;
   height: 64px;
@@ -175,16 +174,23 @@
 
 .message-row {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
   width: 100%;
   box-sizing: border-box;
 }
 
-/* Avatar người gửi */
+.message-row.me {
+  justify-content: flex-end;
+}
+
+.message-row.other {
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 10px;
+}
+
 .message-sender-avatar {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
@@ -193,8 +199,8 @@
 }
 
 .message-sender-avatar-placeholder {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background-color: #e2e8f0;
   color: #64748b;
@@ -206,49 +212,75 @@
   margin-top: 2px;
 }
 
-/* nội dung tin nhắn */
 .message-content-group {
   display: flex;
   flex-direction: column;
-  max-width: 65%;
+  max-width: 68%;
   min-width: 60px;
 }
 
-/* Người gửi */
-.message-header-info {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 4px;
+.message-content-group.me {
+  align-items: flex-end;
+}
+
+.message-content-group.other {
+  align-items: flex-start;
 }
 
 .message-sender-name {
   font-size: 12px;
   font-weight: 600;
-  color: #1e293b;
-}
-
-.message-time {
-  font-size: 11px;
-  color: #94a3b8;
+  color: #475569;
+  margin-bottom: 4px;
+  margin-left: 2px;
+  display: block;
 }
 
 .message-bubble {
-  padding: 10px 15px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 10px 14px;
   font-size: 14.5px;
   line-height: 1.45;
   box-sizing: border-box;
-  background-color: #ffffff;
-  color: #0f172a;
-  border-radius: 4px 16px 16px 16px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   word-break: break-word;
   overflow-wrap: break-word;
   white-space: pre-wrap;
 }
 
-/* ChatInput cố định ở đáy */
+.message-bubble.me {
+  background-color: #0084ff;
+  color: #ffffff;
+  border: none;
+  border-radius: 18px 18px 4px 18px;
+  box-shadow: 0 1px 2px rgba(0, 132, 255, 0.2);
+}
+
+.message-bubble.other {
+  background-color: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px 18px 18px 18px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.message-time {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 4px;
+  display: inline-block;
+}
+
+.message-time.me {
+  text-align: right;
+  margin-right: 4px;
+}
+
+.message-time.other {
+  text-align: left;
+  margin-left: 4px;
+}
+
 .chat-input-bar {
   flex-shrink: 0;
   background-color: #ffffff;
