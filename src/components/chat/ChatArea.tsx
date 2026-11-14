@@ -3,51 +3,73 @@ import './Chat.css';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
-import { mockMessages } from '../../data/mockMessages';
+import { ChatPlaceholder } from './ChatPlaceholder';
+import {
+  mockMessages,
+  mockMessagesByConversationId,
+  mockThuongMessages,
+  mockYenMessages,
+} from '../../data/mockMessages';
 import type { ChatMessageType, ConversationItemType } from '../../types/chat';
 import { useAppSelector } from '../../hooks/useAppRedux';
 
 interface ChatAreaProps {
-  activeConversation?: ConversationItemType;
+  activeConversation?: ConversationItemType | null;
   currentUsername?: string;
 }
 
 export const ChatArea: React.FC<ChatAreaProps> = ({
-  activeConversation = {
-    id: '1',
-    name: 'Nhóm Đồ Án LTFE',
-    type: 1,
-    avatar: 'https://i.pravatar.cc/150?u=1',
-    lastMessage: 'Push code lên đi Phát ơi',
-    actionTime: '18:05',
-    isOnline: true,
-  },
+  activeConversation: propConversation,
   currentUsername = 'Tấn Phát',
 }) => {
+  const reduxActiveConversation = useAppSelector((state) => state.chat.activeConversation);
+  const activeConversation = propConversation !== undefined ? propConversation : reduxActiveConversation;
+
   const authUsername = useAppSelector((state) => state.auth.username);
   const activeUser = authUsername || currentUsername;
 
-  // Khởi tạo tin nhắn: nếu người dùng đăng nhập bằng tài khoản test (như 'hih'),
-  // map các tin nhắn mẫu của 'Tấn Phát' (người gửi đại diện phía mình) sang activeUser để hiển thị đúng giao diện tin nhắn của mình
-  const [messages, setMessages] = useState<ChatMessageType[]>(() => {
-    return mockMessages.map((msg) =>
-      msg.name === 'Tấn Phát' && activeUser !== 'Tấn Phát'
-        ? { ...msg, name: activeUser }
-        : msg
+  const getConversationMessages = (conv: ConversationItemType, user: string): ChatMessageType[] => {
+    let list: ChatMessageType[] = [];
+    if (conv.id && mockMessagesByConversationId[conv.id]) {
+      list = mockMessagesByConversationId[conv.id];
+    } else if (conv.name === 'Nhóm Đồ Án LTFE') {
+      list = mockMessages;
+    } else if (conv.name === 'Nguyễn Hoài Thương') {
+      list = mockThuongMessages;
+    } else if (conv.name === 'Tiểu Yến') {
+      list = mockYenMessages;
+    } else {
+      list = [
+        {
+          id: Date.now(),
+          name: conv.name,
+          to: user,
+          mes: `Chào bạn! Đây là cuộc hội thoại mới với ${conv.name}.`,
+          createAt: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+          type: conv.type,
+        },
+      ];
+    }
+
+    return list.map((msg) =>
+      msg.name === 'Tấn Phát' && user !== 'Tấn Phát' ? { ...msg, name: user } : msg
     );
+  };
+
+  const [messages, setMessages] = useState<ChatMessageType[]>(() => {
+    return activeConversation ? getConversationMessages(activeConversation, activeUser) : [];
   });
 
   useEffect(() => {
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.name === 'Tấn Phát' && activeUser !== 'Tấn Phát'
-          ? { ...msg, name: activeUser }
-          : msg
-      )
-    );
-  }, [activeUser]);
+    if (activeConversation) {
+      setMessages(getConversationMessages(activeConversation, activeUser));
+    }
+  }, [activeConversation?.name, activeConversation?.id, activeUser]);
 
-  // Xử lý gửi tin nhắn mới
+  if (!activeConversation) {
+    return <ChatPlaceholder />;
+  }
+
   const handleSendMessage = (text: string) => {
     const newMessage: ChatMessageType = {
       id: Date.now(),

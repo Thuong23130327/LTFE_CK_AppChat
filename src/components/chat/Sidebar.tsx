@@ -5,6 +5,7 @@ import { ws } from '../../services/websocket';
 import { WS_EVENTS, type ConversationItemType, type WsResponse } from '../../types/chat';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppRedux';
 import { logout } from '../../store/slices/authSlice';
+import { mockConversations } from '../../data/mockConversations';
 import {
     resetChatState,
     setActiveConversation,
@@ -27,11 +28,8 @@ export const Sidebar: React.FC = () => {
     const [roomError, setRoomError] = useState('');
     const [searchStatusMsg, setSearchStatusMsg] = useState('');
 
-    // lưu tên user hoặc phòng đang thao tác để xử lý response bất đồng bộ từ WebSocket
     const pendingSearchUserRef = useRef<string>('');
     const pendingRoomNameRef = useRef<string>('');
-
-    // gọi GET_USER_LIST khi đã xác thực thành công
     useEffect(() => {
         if (isAuthenticated) {
             dispatch(setLoadingList(true));
@@ -158,8 +156,26 @@ export const Sidebar: React.FC = () => {
         return () => ws.removeMessageListener(handleWsMessage);
     }, [dispatch, username]);
 
+    const combinedConversations = (() => {
+        const map = new Map<string, ConversationItemType>();
+
+        conversations.forEach((conv) => {
+            const key = `${conv.type}-${conv.name}`;
+            map.set(key, conv);
+        });
+
+        mockConversations.forEach((mockConv) => {
+            const key = `${mockConv.type}-${mockConv.name}`;
+            if (!map.has(key)) {
+                map.set(key, mockConv);
+            }
+        });
+
+        return Array.from(map.values());
+    })();
+
     // lọc list chat theo từ khóa tìm kiếm
-    const filteredConversations = conversations.filter((conv) =>
+    const filteredConversations = combinedConversations.filter((conv) =>
         conv.name.toLowerCase().includes(searchTerm.trim().toLowerCase())
     );
 
@@ -307,7 +323,7 @@ export const Sidebar: React.FC = () => {
 
             {/* list chat */}
             <div className="sidebar-content" style={{ padding: 0 }}>
-                {isLoadingList ? (
+                {isLoadingList && combinedConversations.length === 0 ? (
                     <p style={{ textAlign: 'center', color: '#888', padding: '16px' }}>
                         Đang tải danh sách trò chuyện...
                     </p>
