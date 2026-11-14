@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Chat.css';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { mockMessages } from '../../data/mockMessages';
 import type { ChatMessageType, ConversationItemType } from '../../types/chat';
+import { useAppSelector } from '../../hooks/useAppRedux';
 
 interface ChatAreaProps {
   activeConversation?: ConversationItemType;
@@ -23,13 +24,34 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   },
   currentUsername = 'Tấn Phát',
 }) => {
-  const [messages, setMessages] = useState<ChatMessageType[]>(mockMessages);
+  const authUsername = useAppSelector((state) => state.auth.username);
+  const activeUser = authUsername || currentUsername;
 
-  // xử lý gửi tin nhắn mới
+  // Khởi tạo tin nhắn: nếu người dùng đăng nhập bằng tài khoản test (như 'hih'),
+  // map các tin nhắn mẫu của 'Tấn Phát' (người gửi đại diện phía mình) sang activeUser để hiển thị đúng giao diện tin nhắn của mình
+  const [messages, setMessages] = useState<ChatMessageType[]>(() => {
+    return mockMessages.map((msg) =>
+      msg.name === 'Tấn Phát' && activeUser !== 'Tấn Phát'
+        ? { ...msg, name: activeUser }
+        : msg
+    );
+  });
+
+  useEffect(() => {
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.name === 'Tấn Phát' && activeUser !== 'Tấn Phát'
+          ? { ...msg, name: activeUser }
+          : msg
+      )
+    );
+  }, [activeUser]);
+
+  // Xử lý gửi tin nhắn mới
   const handleSendMessage = (text: string) => {
     const newMessage: ChatMessageType = {
       id: Date.now(),
-      name: currentUsername,
+      name: activeUser,
       to: activeConversation.name,
       mes: text,
       createAt: new Date().toLocaleTimeString('vi-VN', {
@@ -53,7 +75,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       />
 
       {/* MessageList */}
-      <MessageList messages={messages} />
+      <MessageList messages={messages} currentUsername={activeUser} />
 
       {/* ChatInput */}
       <ChatInput onSendMessage={handleSendMessage} />
