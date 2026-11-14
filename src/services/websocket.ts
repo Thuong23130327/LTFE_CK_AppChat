@@ -7,8 +7,10 @@ class WebSocketService {
   private socket: WebSocket | null = null;
   private listeners: MessageListener[] = [];
   private isConnecting: boolean = false;
+  private pendingQueue: string[] = [];
 
-  private constructor() { }
+  private constructor() {}
+
   public static getInstance(): WebSocketService {
     if (!WebSocketService.instance) {
       WebSocketService.instance = new WebSocketService();
@@ -17,53 +19,62 @@ class WebSocketService {
   }
 
   public connect(): void {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      return;
-    }
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) return;
     if (this.isConnecting) return;
+
     this.isConnecting = true;
     this.socket = new WebSocket(this.url);
+
     this.socket.onopen = () => {
-      console.log("ok WebSocket connected.");
+      console.log("WebSocket connected.");
       this.isConnecting = false;
+      while (this.pendingQueue.length > 0) {
+        const msg = this.pendingQueue.shift();
+        if (msg && this.socket?.readyState === WebSocket.OPEN) {
+          this.socket.send(msg);
+        }
+      }
     };
+
     this.socket.onmessage = (event: MessageEvent) => {
       const data: WsResponse = JSON.parse(event.data);
       this.listeners.forEach((listener) => listener(data));
     };
+
     this.socket.onerror = (error: Event) => {
       console.error("WebSocket error:", error);
     };
+
     this.socket.onclose = () => {
-      console.log("WebSocket closed. Attempting to reconnect...");
+      console.log("WebSocket closed. Reconnecting...");
       this.isConnecting = false;
       setTimeout(() => this.connect(), 5000);
     };
   }
 
-  public send(event: string, data?: any): void {
+  public send(event: string, data?: unknown): void {
+    const payload: WsRequest = {
+      action: "onchat",
+      data: data !== undefined ? { event, data } : { event },
+    };
+    const serialized = JSON.stringify(payload);
+
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      console.warn("WebSocket is not connected. Cannot send message.");
+      this.pendingQueue.push(serialized);
+      this.connect();
       return;
     }
 
-    const payload: WsRequest = {
-      action: "onchat",
-      data: {
-        event: event,
-        data: data,
-      },
-    };
-    this.socket.send(JSON.stringify(payload));
+    this.socket.send(serialized);
   }
 
   public addMessageListener(listener: MessageListener): void {
     this.listeners.push(listener);
   }
+
   public removeMessageListener(listener: MessageListener): void {
     this.listeners = this.listeners.filter((l) => l !== listener);
   }
 }
 
 export const ws = WebSocketService.getInstance();
-

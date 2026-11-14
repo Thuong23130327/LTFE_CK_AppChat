@@ -1,7 +1,8 @@
-export interface WsRequest<T = any> {
+export interface WsRequest<T = unknown> {
     action: "onchat";
     data: {
-        event: string; data?: T;
+        event: string;
+        data?: T;
     };
 }
 
@@ -22,23 +23,27 @@ export interface UserAuthInfo {
     isAuthenticated: boolean;
 }
 
-// Đã bổ sung các trường UI vào thẳng interface gốc
 export interface ConversationItemType {
-    id: string;
+    id?: string;
     name: string;
-    type: 0 | 1;
+    type: 0 | 1; // 0: Chat 1-1 (people), 1: Nhóm (room)
     actionTime: string;
     avatar?: string;
     lastMessage?: string;
     isOnline?: boolean;
 }
 
-export interface ChatMessageType {
+export interface RoomMemberType {
     id: number;
+    name: string;
+}
+
+export interface ChatMessageType {
+    id?: number;
     name: string;
     to: string;
     mes: string;
-    createAt: string;
+    createAt?: string;
     type: 0 | 1;
 }
 
