@@ -25,7 +25,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 }) => {
   const [messages, setMessages] = useState<ChatMessageType[]>(mockMessages);
 
-  // Xử lý gửi tin nhắn mới
+  // xử lý gửi tin nhắn mới
   const handleSendMessage = (text: string) => {
     const newMessage: ChatMessageType = {
       id: Date.now(),
