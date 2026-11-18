@@ -123,6 +123,17 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             if (newMsg.id && prev.some((m) => m.id === newMsg.id)) {
               return prev;
             }
+
+            const optimisticIndex = prev.findIndex(
+              (m) => m.name === activeUser && m.mes === newMsg.mes
+            );
+
+            if (optimisticIndex !== -1 && incoming.name === activeUser) {
+              const updated = [...prev];
+              updated[optimisticIndex] = newMsg;
+              return updated;
+            }
+
             return [...prev, newMsg];
           });
         }
@@ -169,7 +180,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       <MessageList messages={messages} currentUsername={activeUser} />
 
       {/* ChatInput */}
-      <ChatInput onSendMessage={handleSendMessage} />
+      <ChatInput
+        activeConversation={activeConversation}
+        onSendMessage={handleSendMessage}
+      />
     </section>
   );
 };

@@ -12,6 +12,19 @@ export interface MessageBubbleProps {
   children?: React.ReactNode;
 }
 
+const formatDisplayTime = (rawTime?: string): string => {
+  if (!rawTime) return '';
+  if (rawTime.includes(' ')) {
+    const parts = rawTime.split(' ');
+    if (parts[1]) return parts[1].slice(0, 5);
+  }
+  if (rawTime.includes('T')) {
+    const parts = rawTime.split('T');
+    if (parts[1]) return parts[1].slice(0, 5);
+  }
+  return rawTime.length > 5 ? rawTime.slice(0, 5) : rawTime;
+};
+
 export const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,
   text,
@@ -22,7 +35,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   children,
 }) => {
   const content = children ?? text ?? message?.mes ?? '';
-  const displayTime = time ?? message?.createAt ?? '';
+  const rawTime = time ?? message?.createAt ?? '';
+  const displayTime = formatDisplayTime(rawTime);
   const displayName = senderName ?? message?.name ?? '';
 
   if (isMe) {
