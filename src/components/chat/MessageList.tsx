@@ -24,24 +24,18 @@ export const MessageList: React.FC<MessageListProps> = ({
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const hasMyMessages = messages.some((m) => m.name === currentUsername);
-
   return (
     <div className="message-list-container">
-      {messages.map((msg) => {
+      {messages.map((msg, index) => {
         const avatarUrl =
           AVATAR_MAP[msg.name] ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.name)}&background=random`;
 
-        const isMe = Boolean(
-          currentUsername &&
-          (msg.name === currentUsername ||
-            (!hasMyMessages && msg.name === 'Tấn Phát'))
-        );
+        const isMe = currentUsername ? msg.name === currentUsername : false;
 
         return (
           <MessageBubble
-            key={msg.id}
+            key={msg.id ?? `${msg.name}-${msg.createAt}-${index}`}
             message={msg}
             avatar={avatarUrl}
             isMe={isMe}
