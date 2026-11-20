@@ -16,12 +16,21 @@ const AVATAR_MAP: Record<string, string> = {
 
 export const MessageList: React.FC<MessageListProps> = ({
   messages = [],
-  currentUsername = 'Tấn Phát',
+  currentUsername = 'Tiểu Yến',
 }) => {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    bottomRef.current?.scrollIntoView({ behavior, block: 'end' });
+  };
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollToBottom('smooth');
+    const timer = setTimeout(() => {
+      scrollToBottom('smooth');
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [messages]);
 
   return (

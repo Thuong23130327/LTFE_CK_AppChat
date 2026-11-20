@@ -20,7 +20,7 @@ interface ChatAreaProps {
 
 export const ChatArea: React.FC<ChatAreaProps> = ({
   activeConversation: propConversation,
-  currentUsername = 'Tấn Phát',
+  currentUsername = 'Tiểu Yến',
 }) => {
   const reduxActiveConversation = useAppSelector((state) => state.chat.activeConversation);
   const activeConversation = propConversation !== undefined ? propConversation : reduxActiveConversation;
@@ -93,24 +93,39 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           }
         }
 
-        setMessages(list);
+        // lọc tn trùng
+        const uniqueList: ChatMessageType[] = [];
+        const seenKeys = new Set<string>();
+        for (const item of list) {
+          const key = item.id != null ? `id-${item.id}` : `${item.name}-${item.createAt}-${item.mes}`;
+          if (!seenKeys.has(key)) {
+            seenKeys.add(key);
+            uniqueList.push(item);
+          }
+        }
+
+        setMessages(uniqueList);
       }
 
       if (res.event === WS_EVENTS.SEND_CHAT && res.status === 'success' && res.data) {
         const incoming = res.data;
 
+        const targetRoom = incoming.to || incoming.room || incoming.roomName;
+        const sender = incoming.name || incoming.user || incoming.from || '';
+        const receiver = incoming.to || '';
+
         const isMatchRoom =
-          activeConversation.type === 1 && incoming.to === activeConversation.name;
+          activeConversation.type === 1 && targetRoom === activeConversation.name;
         const isMatchPeople =
           activeConversation.type === 0 &&
-          ((incoming.name === activeConversation.name && incoming.to === activeUser) ||
-            (incoming.name === activeUser && incoming.to === activeConversation.name));
+          ((sender === activeConversation.name && receiver === activeUser) ||
+            (sender === activeUser && receiver === activeConversation.name));
 
         if (isMatchRoom || isMatchPeople) {
           const newMsg: ChatMessageType = {
-            id: incoming.id ?? Date.now(),
-            name: incoming.name || incoming.user || '',
-            to: incoming.to || activeConversation.name,
+            id: incoming.id,
+            name: sender,
+            to: receiver || activeConversation.name,
             mes: incoming.mes || incoming.message || '',
             createAt:
               incoming.createAt ||
@@ -119,19 +134,45 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             type: activeConversation.type,
           };
 
+          //chống lặp tn khi nhận
           setMessages((prev) => {
-            if (newMsg.id && prev.some((m) => m.id === newMsg.id)) {
-              return prev;
-            }
+            const isDuplicate = prev.some((m) => {
+              if (newMsg.id != null && m.id != null && m.id === newMsg.id) {
+                return true;
+              }
 
-            const optimisticIndex = prev.findIndex(
-              (m) => m.name === activeUser && m.mes === newMsg.mes
-            );
+              if (m.name === newMsg.name && m.mes === newMsg.mes) {
+                if (m.createAt && newMsg.createAt) {
+                  const mTime = m.createAt.slice(-5);
+                  const newTime = newMsg.createAt.slice(-5);
+                  if (m.createAt === newMsg.createAt || mTime === newTime) {
+                    return true;
+                  }
+                }
+                if (m.name === activeUser) {
+                  return true;
+                }
+              }
 
-            if (optimisticIndex !== -1 && incoming.name === activeUser) {
-              const updated = [...prev];
-              updated[optimisticIndex] = newMsg;
-              return updated;
+              return false;
+            });
+
+            if (isDuplicate) {
+              let updatedPending = false;
+              return prev.map((m) => {
+                if (newMsg.id != null && m.id === newMsg.id) {
+                  return m;
+                }
+                if (!updatedPending && m.name === newMsg.name && m.mes === newMsg.mes) {
+                  updatedPending = true;
+                  return {
+                    ...m,
+                    id: newMsg.id ?? m.id,
+                    createAt: newMsg.createAt || m.createAt,
+                  };
+                }
+                return m;
+              });
             }
 
             return [...prev, newMsg];
@@ -151,15 +192,17 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   }
 
   const handleSendMessage = (text: string) => {
+    const now = new Date();
+    const formattedLocalTime = `${String(now.getHours()).padStart(2, '0')}:${String(
+      now.getMinutes()
+    ).padStart(2, '0')}`;
+
     const newMessage: ChatMessageType = {
       id: Date.now(),
       name: activeUser,
       to: activeConversation.name,
       mes: text,
-      createAt: new Date().toLocaleTimeString('vi-VN', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+      createAt: formattedLocalTime,
       type: activeConversation.type,
     };
 
