@@ -19,6 +19,14 @@ export const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ isOpen, onClose })
     const [isJoining, setIsJoining] = useState(false);
 
     const pendingRoomRef = useRef<string>('');
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const clearTimer = () => {
+        if (timerRef.current) {
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
+        }
+    };
 
     useEffect(() => {
         if (isOpen) {
@@ -26,7 +34,11 @@ export const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ isOpen, onClose })
             setError('');
             setIsJoining(false);
             pendingRoomRef.current = '';
+            clearTimer();
+        } else {
+            clearTimer();
         }
+        return () => clearTimer();
     }, [isOpen]);
 
     // lắng nghe phản hồi JOIN_ROOM từ WebSocket
@@ -39,6 +51,7 @@ export const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ isOpen, onClose })
             const requestedRoom = pendingRoomRef.current;
             if (!requestedRoom) return;
 
+            clearTimer();
             setIsJoining(false);
             pendingRoomRef.current = '';
 
@@ -75,6 +88,7 @@ export const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ isOpen, onClose })
         ws.addMessageListener(handleWsMessage);
         return () => {
             ws.removeMessageListener(handleWsMessage);
+            clearTimer();
         };
     }, [isOpen, dispatch, onClose]);
 
@@ -92,6 +106,14 @@ export const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ isOpen, onClose })
         setError('');
         setIsJoining(true);
         pendingRoomRef.current = trimmed;
+        clearTimer();
+        timerRef.current = setTimeout(() => {
+            if (pendingRoomRef.current) {
+                setIsJoining(false);
+                pendingRoomRef.current = '';
+                setError('Không nhận được phản hồi từ máy chủ. Vui lòng thử lại.');
+            }
+        }, 7000);
         ws.send(WS_EVENTS.JOIN_ROOM, { name: trimmed });
     };
 

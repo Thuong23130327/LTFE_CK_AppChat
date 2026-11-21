@@ -21,6 +21,14 @@ export const DirectChatModal: React.FC<DirectChatModalProps> = ({ isOpen, onClos
 
     // lưu tên user đang chờ server phản hồi
     const pendingUserRef = useRef<string>('');
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const clearTimer = () => {
+        if (timerRef.current) {
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
+        }
+    };
 
     // reset state mỗi khi đóng mở modal
     useEffect(() => {
@@ -29,7 +37,11 @@ export const DirectChatModal: React.FC<DirectChatModalProps> = ({ isOpen, onClos
             setError('');
             setIsSearching(false);
             pendingUserRef.current = '';
+            clearTimer();
+        } else {
+            clearTimer();
         }
+        return () => clearTimer();
     }, [isOpen]);
 
     // lắng nghe phản hồi CHECK_USER_EXIST từ WebSocket
@@ -42,6 +54,7 @@ export const DirectChatModal: React.FC<DirectChatModalProps> = ({ isOpen, onClos
             const searchedUser = pendingUserRef.current;
             if (!searchedUser) return;
 
+            clearTimer();
             setIsSearching(false);
             pendingUserRef.current = '';
 
@@ -76,6 +89,7 @@ export const DirectChatModal: React.FC<DirectChatModalProps> = ({ isOpen, onClos
         ws.addMessageListener(handleWsMessage);
         return () => {
             ws.removeMessageListener(handleWsMessage);
+            clearTimer();
         };
     }, [isOpen, dispatch, onClose]);
 
@@ -98,6 +112,14 @@ export const DirectChatModal: React.FC<DirectChatModalProps> = ({ isOpen, onClos
         setError('');
         setIsSearching(true);
         pendingUserRef.current = trimmed;
+        clearTimer();
+        timerRef.current = setTimeout(() => {
+            if (pendingUserRef.current) {
+                setIsSearching(false);
+                pendingUserRef.current = '';
+                setError('Không nhận được phản hồi từ máy chủ. Vui lòng thử lại.');
+            }
+        }, 7000);
         ws.send(WS_EVENTS.CHECK_USER_EXIST, { user: trimmed });
     };
 
