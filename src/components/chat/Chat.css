@@ -146,13 +146,46 @@
   min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  overflow-anchor: none;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  scroll-behavior: smooth;
   background-color: #f8fafc;
   box-sizing: border-box;
+}
+
+.loading-older-messages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: #64748b;
+  align-self: center;
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+  font-size: 16px;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.no-more-messages {
+  text-align: center;
+  font-size: 12px;
+  color: #94a3b8;
+  padding: 6px;
+  margin-bottom: 4px;
 }
 
 .message-list-container::-webkit-scrollbar {

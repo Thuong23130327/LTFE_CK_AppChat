@@ -1,6 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Sidebar.css';
+import { IoPersonAddOutline, IoEnterOutline, IoLogOutOutline } from 'react-icons/io5';
 import { ConversationItem } from './ConversationItem';
+import { DirectChatModal } from './DirectChatModal';
+import { JoinRoomModal } from './JoinRoomModal';
 import { ws } from '../../services/websocket';
 import { WS_EVENTS, type ConversationItemType, type WsResponse } from '../../types/chat';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppRedux';
@@ -31,6 +34,9 @@ export const Sidebar: React.FC = () => {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const pendingSearchUserRef = useRef<string>('');
     const pendingRoomNameRef = useRef<string>('');
+    const [isDirectChatModalOpen, setIsDirectChatModalOpen] = useState(false);
+    const [isJoinRoomModalOpen, setIsJoinRoomModalOpen] = useState(false);
+
     useEffect(() => {
         if (isAuthenticated) {
             dispatch(setLoadingList(true));
@@ -67,62 +73,14 @@ export const Sidebar: React.FC = () => {
                 }
 
                 case WS_EVENTS.CHECK_USER_ONLINE: {
-                    if (res.status === 'success' && pendingSearchUserRef.current === '') {
-                        if (res.data && typeof res.data.user === 'string') {
-                            dispatch(
-                                updateUserOnlineStatus({
-                                    name: res.data.user,
-                                    isOnline: Boolean(res.data.status),
-                                })
-                            );
-                        }
+                    if (res.status === 'success' && res.data && typeof res.data.user === 'string') {
+                        dispatch(
+                            updateUserOnlineStatus({
+                                name: res.data.user,
+                                isOnline: Boolean(res.data.status),
+                            })
+                        );
                     }
-                    break;
-                }
-
-                case WS_EVENTS.CHECK_USER_EXIST: {
-                    const searchedUser = pendingSearchUserRef.current;
-                    if (!searchedUser) break;
-
-                    const exists = Boolean(res.data?.status ?? res.data === true);
-                    if (res.status === 'success' && exists) {
-                        const newConv: ConversationItemType = {
-                            name: searchedUser,
-                            type: 0,
-                            actionTime: new Date().toTimeString().slice(0, 5),
-                        };
-                        dispatch(upsertConversation(newConv));
-                        dispatch(setActiveConversation(newConv));
-                        setSearchTerm('');
-                        setSearchStatusMsg('');
-                    } else {
-                        setSearchStatusMsg(`Không tìm thấy người dùng "${searchedUser}"`);
-                    }
-                    pendingSearchUserRef.current = '';
-                    break;
-                }
-
-                case WS_EVENTS.CREATE_ROOM:
-                case WS_EVENTS.JOIN_ROOM: {
-                    if (res.status === 'success') {
-                        const targetRoom = pendingRoomNameRef.current || res.data?.name;
-                        if (targetRoom) {
-                            const newRoom: ConversationItemType = {
-                                name: targetRoom,
-                                type: 1,
-                                actionTime: new Date().toTimeString().slice(0, 5),
-                            };
-                            dispatch(upsertConversation(newRoom));
-                            dispatch(setActiveConversation(newRoom));
-                        }
-                        ws.send(WS_EVENTS.GET_USER_LIST);
-                        setRoomName('');
-                        setRoomError('');
-                        setShowRoomModal(false);
-                    } else {
-                        setRoomError(res.mes || 'Thao tác phòng thất bại');
-                    }
-                    pendingRoomNameRef.current = '';
                     break;
                 }
 
@@ -175,29 +133,9 @@ export const Sidebar: React.FC = () => {
         return Array.from(map.values());
     })();
 
-    // lọc list chat theo từ khóa tìm kiếm
     const filteredConversations = combinedConversations.filter((conv) =>
         conv.name.toLowerCase().includes(searchTerm.trim().toLowerCase())
     );
-
-    const handleSearchUserOnServer = () => {
-        const keyword = searchTerm.trim();
-        if (!keyword) return;
-        setSearchStatusMsg('Đang tìm người dùng...');
-        pendingSearchUserRef.current = keyword;
-        ws.send(WS_EVENTS.CHECK_USER_EXIST, { user: keyword });
-    };
-
-    const handleRoomAction = (eventType: 'CREATE_ROOM' | 'JOIN_ROOM') => {
-        const trimmed = roomName.trim();
-        if (!trimmed) {
-            setRoomError('Vui lòng nhập tên phòng');
-            return;
-        }
-        setRoomError('');
-        pendingRoomNameRef.current = trimmed;
-        ws.send(WS_EVENTS[eventType], { name: trimmed });
-    };
 
     const handleLogout = () => {
         ws.send(WS_EVENTS.LOGOUT);
@@ -222,72 +160,42 @@ export const Sidebar: React.FC = () => {
                 </div>
                 <div className="sidebar-actions">
                     <button
-                        title="Tạo / Tham gia phòng"
-                        onClick={() => {
-                            setShowRoomModal((prev) => !prev);
-                            setRoomError('');
-                        }}
-                        style={{ marginRight: '8px', cursor: 'pointer' }}
+                        type="button"
+                        className="sidebar-action-btn"
+                        title="Bắt đầu chat 1-1"
+                        onClick={() => setIsDirectChatModalOpen(true)}
+                        aria-label="Bắt đầu chat 1-1"
                     >
-                        ➕
+                        <IoPersonAddOutline />
                     </button>
-                    <button title="Đăng xuất" onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
-                        🚪
+                    <button
+                        type="button"
+                        className="sidebar-action-btn"
+                        title="Tham gia phòng"
+                        onClick={() => setIsJoinRoomModalOpen(true)}
+                        aria-label="Tham gia phòng"
+                    >
+                        <IoEnterOutline />
+                    </button>
+                    <button
+                        type="button"
+                        className="sidebar-action-btn logout"
+                        title="Đăng xuất"
+                        onClick={() => setShowLogoutModal(true)}
+                        aria-label="Đăng xuất"
+                    >
+                        <IoLogOutOutline />
+
                     </button>
                 </div>
             </div>
 
-            {/* form tạo hoặc tham gia phòng nhanh */}
-            {showRoomModal && (
-                <div style={{ padding: '10px 16px', background: '#f5f7fb', borderBottom: '1px solid #ddd' }}>
-                    <input
-                        type="text"
-                        value={roomName}
-                        onChange={(e) => setRoomName(e.target.value)}
-                        placeholder="Nhập tên phòng..."
-                        style={{
-                            width: '100%',
-                            padding: '6px 10px',
-                            borderRadius: '6px',
-                            border: '1px solid #ccc',
-                            marginBottom: '8px',
-                            boxSizing: 'border-box',
-                        }}
-                    />
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                            onClick={() => handleRoomAction('CREATE_ROOM')}
-                            style={{ flex: 1, padding: '6px', cursor: 'pointer' }}
-                        >
-                            Tạo phòng
-                        </button>
-                        <button
-                            onClick={() => handleRoomAction('JOIN_ROOM')}
-                            style={{ flex: 1, padding: '6px', cursor: 'pointer' }}
-                        >
-                            Tham gia
-                        </button>
-                    </div>
-                    {roomError && (
-                        <p style={{ color: 'red', fontSize: '12px', margin: '6px 0 0' }}>{roomError}</p>
-                    )}
-                </div>
-            )}
-
-            {/* thanh tìm kiếm */}
+            {/* thanh tìm kiếm hội thoại hiện có trong danh sách */}
             <div className="sidebar-search" style={{ padding: '12px 16px', borderBottom: '1px solid #ddd' }}>
                 <input
                     type="text"
                     value={searchTerm}
-                    onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        setSearchStatusMsg('');
-                    }}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter' && filteredConversations.length === 0) {
-                            handleSearchUserOnServer();
-                        }
-                    }}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Tìm kiếm bạn bè, nhóm..."
                     style={{
                         width: '100%',
@@ -298,31 +206,9 @@ export const Sidebar: React.FC = () => {
                         boxSizing: 'border-box',
                     }}
                 />
-                {searchTerm.trim() !== '' && (
-                    <button
-                        onClick={handleSearchUserOnServer}
-                        style={{
-                            marginTop: '8px',
-                            width: '100%',
-                            padding: '6px 10px',
-                            borderRadius: '8px',
-                            border: '1px dashed #888',
-                            background: '#fff',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                        }}
-                    >
-                        🔍 Tìm người dùng mới "{searchTerm.trim()}" trên hệ thống
-                    </button>
-                )}
-                {searchStatusMsg && (
-                    <p style={{ fontSize: '12px', color: '#666', margin: '6px 0 0' }}>
-                        {searchStatusMsg}
-                    </p>
-                )}
             </div>
 
-            {/* list chat */}
+            {/* danh sách cuộc trò chuyện */}
             <div className="sidebar-content" style={{ padding: 0 }}>
                 {isLoadingList && combinedConversations.length === 0 ? (
                     <p style={{ textAlign: 'center', color: '#888', padding: '16px' }}>
@@ -358,7 +244,17 @@ export const Sidebar: React.FC = () => {
                 onConfirm={() => {
                     setShowLogoutModal(false);
                     handleLogout();
-                }}
+                }}  />
+
+
+            <DirectChatModal
+                isOpen={isDirectChatModalOpen}
+                onClose={() => setIsDirectChatModalOpen(false)}
+            />
+            <JoinRoomModal
+                isOpen={isJoinRoomModalOpen}
+                onClose={() => setIsJoinRoomModalOpen(false)}
+
             />
         </div>
     );

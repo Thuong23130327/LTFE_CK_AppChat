@@ -12,6 +12,45 @@ export interface MessageBubbleProps {
   children?: React.ReactNode;
 }
 
+export const formatDisplayTime = (rawTime?: string): string => {
+  if (!rawTime) return '';
+  const str = String(rawTime).trim();
+  if (/^\d{1,2}:\d{2}$/.test(str)) {
+    return str;
+  }
+  if (/^\d{1,2}:\d{2}:\d{2}$/.test(str)) {
+    return str.slice(0, 5);
+  }
+
+  let isoStr = str;
+  if (str.includes(' ') && !str.includes('T')) {
+    isoStr = str.replace(' ', 'T');
+  }
+
+  const dmyMatch = isoStr.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})T(.*)$/);
+  if (dmyMatch) {
+    isoStr = `${dmyMatch[3]}-${dmyMatch[2].padStart(2, '0')}-${dmyMatch[1].padStart(2, '0')}T${dmyMatch[4]}`;
+  }
+
+  if (!isoStr.endsWith('Z') && !/[+-]\d{2}(:\d{2})?$/.test(isoStr)) {
+    isoStr += 'Z';
+  }
+
+  const d = new Date(isoStr);
+  if (!isNaN(d.getTime())) {
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  if (str.includes(' ')) {
+    const parts = str.split(' ');
+    if (parts[1]) return parts[1].slice(0, 5);
+  }
+
+  return str.length > 5 ? str.slice(0, 5) : str;
+};
+
 export const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,
   text,
@@ -22,7 +61,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   children,
 }) => {
   const content = children ?? text ?? message?.mes ?? '';
-  const displayTime = time ?? message?.createAt ?? '';
+  const rawTime = time ?? message?.createAt ?? '';
+  const displayTime = formatDisplayTime(rawTime);
   const displayName = senderName ?? message?.name ?? '';
 
   if (isMe) {
