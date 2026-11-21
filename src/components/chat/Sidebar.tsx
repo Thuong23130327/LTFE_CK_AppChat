@@ -14,8 +14,9 @@ import {
     updateUserOnlineStatus,
     upsertConversation,
 } from '../../store/slices/chatSlice';
-
+import { LogoutModal } from '../auth/LogoutModal';
 export const Sidebar: React.FC = () => {
+
     const dispatch = useAppDispatch();
     const { username, isAuthenticated } = useAppSelector((state) => state.auth);
     const { conversations, activeConversation, isLoadingList } = useAppSelector(
@@ -27,7 +28,7 @@ export const Sidebar: React.FC = () => {
     const [roomName, setRoomName] = useState('');
     const [roomError, setRoomError] = useState('');
     const [searchStatusMsg, setSearchStatusMsg] = useState('');
-
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
     const pendingSearchUserRef = useRef<string>('');
     const pendingRoomNameRef = useRef<string>('');
     useEffect(() => {
@@ -230,7 +231,7 @@ export const Sidebar: React.FC = () => {
                     >
                         ➕
                     </button>
-                    <button title="Đăng xuất" onClick={handleLogout} style={{ cursor: 'pointer' }}>
+                    <button title="Đăng xuất" onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
                         🚪
                     </button>
                 </div>
@@ -351,6 +352,14 @@ export const Sidebar: React.FC = () => {
                     </div>
                 )}
             </div>
+            <LogoutModal
+                isOpen={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                onConfirm={() => {
+                    setShowLogoutModal(false);
+                    handleLogout();
+                }}
+            />
         </div>
     );
 };
