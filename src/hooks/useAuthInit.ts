@@ -1,13 +1,22 @@
 import { useEffect } from "react";
 import { ws } from "../services/websocket";
 import { useAppDispatch } from "./useAppRedux";
-import { loginSuccess, logout } from "../store/slices/authSlice";
+import { loginSuccess, logout, setCheckingAuth } from "../store/slices/authSlice";
+import type { WsResponse } from "../types/chat";
 
 export function useAuthInit() {
     const dispatch = useAppDispatch();
 
     useEffect(() => {
-        const onMessage = (res: any) => {
+        const savedUser = localStorage.getItem("username");
+        const savedCode = localStorage.getItem("reLoginCode");
+
+        if (!savedUser || !savedCode) {
+            dispatch(setCheckingAuth(false));
+            return;
+        }
+
+        const onMessage = (res: WsResponse) => {
             if (res.event === "RE_LOGIN") {
                 if (res.status === "success" && res.data) {
                     const username = localStorage.getItem("username") || "";
@@ -33,15 +42,10 @@ export function useAuthInit() {
 
         ws.addMessageListener(onMessage);
 
-        const savedUser = localStorage.getItem("username");
-        const savedCode = localStorage.getItem("reLoginCode");
-
-        if (savedUser && savedCode) {
-            ws.send("RE_LOGIN", {
-                user: savedUser,
-                code: savedCode,
-            });
-        }
+        ws.send("RE_LOGIN", {
+            user: savedUser,
+            code: savedCode,
+        });
 
         return () => {
             ws.removeMessageListener(onMessage);

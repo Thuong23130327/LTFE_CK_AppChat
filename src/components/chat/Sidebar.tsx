@@ -17,8 +17,9 @@ import {
     updateUserOnlineStatus,
     upsertConversation,
 } from '../../store/slices/chatSlice';
-
+import { LogoutModal } from '../auth/LogoutModal';
 export const Sidebar: React.FC = () => {
+
     const dispatch = useAppDispatch();
     const { username, isAuthenticated } = useAppSelector((state) => state.auth);
     const { conversations, activeConversation, isLoadingList } = useAppSelector(
@@ -26,6 +27,13 @@ export const Sidebar: React.FC = () => {
     );
 
     const [searchTerm, setSearchTerm] = useState('');
+    const [showRoomModal, setShowRoomModal] = useState(false);
+    const [roomName, setRoomName] = useState('');
+    const [roomError, setRoomError] = useState('');
+    const [searchStatusMsg, setSearchStatusMsg] = useState('');
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const pendingSearchUserRef = useRef<string>('');
+    const pendingRoomNameRef = useRef<string>('');
     const [isDirectChatModalOpen, setIsDirectChatModalOpen] = useState(false);
     const [isJoinRoomModalOpen, setIsJoinRoomModalOpen] = useState(false);
 
@@ -173,10 +181,11 @@ export const Sidebar: React.FC = () => {
                         type="button"
                         className="sidebar-action-btn logout"
                         title="Đăng xuất"
-                        onClick={handleLogout}
+                        onClick={() => setShowLogoutModal(true)}
                         aria-label="Đăng xuất"
                     >
                         <IoLogOutOutline />
+
                     </button>
                 </div>
             </div>
@@ -229,6 +238,14 @@ export const Sidebar: React.FC = () => {
                     </div>
                 )}
             </div>
+            <LogoutModal
+                isOpen={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                onConfirm={() => {
+                    setShowLogoutModal(false);
+                    handleLogout();
+                }}  />
+
 
             <DirectChatModal
                 isOpen={isDirectChatModalOpen}
@@ -237,6 +254,7 @@ export const Sidebar: React.FC = () => {
             <JoinRoomModal
                 isOpen={isJoinRoomModalOpen}
                 onClose={() => setIsJoinRoomModalOpen(false)}
+
             />
         </div>
     );
