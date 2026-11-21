@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './Sidebar.css';
+import { IoPersonAddOutline, IoEnterOutline, IoLogOutOutline } from 'react-icons/io5';
 import { ConversationItem } from './ConversationItem';
 import { DirectChatModal } from './DirectChatModal';
 import { JoinRoomModal } from './JoinRoomModal';
@@ -149,27 +150,33 @@ export const Sidebar: React.FC = () => {
                         {displayName}
                     </span>
                 </div>
-                <div className="sidebar-actions" style={{ display: 'flex', gap: '6px' }}>
+                <div className="sidebar-actions">
                     <button
+                        type="button"
+                        className="sidebar-action-btn"
                         title="Bắt đầu chat 1-1"
                         onClick={() => setIsDirectChatModalOpen(true)}
-                        style={{ cursor: 'pointer', padding: '4px 8px' }}
+                        aria-label="Bắt đầu chat 1-1"
                     >
-                        💬+
+                        <IoPersonAddOutline />
                     </button>
                     <button
+                        type="button"
+                        className="sidebar-action-btn"
                         title="Tham gia phòng"
                         onClick={() => setIsJoinRoomModalOpen(true)}
-                        style={{ cursor: 'pointer', padding: '4px 8px' }}
+                        aria-label="Tham gia phòng"
                     >
-                        👥+
+                        <IoEnterOutline />
                     </button>
                     <button
+                        type="button"
+                        className="sidebar-action-btn logout"
                         title="Đăng xuất"
                         onClick={handleLogout}
-                        style={{ cursor: 'pointer', padding: '4px 8px' }}
+                        aria-label="Đăng xuất"
                     >
-                        🚪
+                        <IoLogOutOutline />
                     </button>
                 </div>
             </div>

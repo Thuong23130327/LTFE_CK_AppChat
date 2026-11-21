@@ -23,11 +23,20 @@ export const chatSlice = createSlice({
             state.isLoadingList = action.payload;
         },
         setConversations: (state, action: PayloadAction<ConversationItemType[]>) => {
+            const incomingKeys = new Set(
+                action.payload.map((item) => `${item.type}-${item.name}`)
+            );
+
+            // Giữ lại các cuộc trò chuyện đang có trong state mà server chưa kịp trả về trong GET_USER_LIST
+            const existingUnlisted = state.conversations.filter(
+                (item) => !incomingKeys.has(`${item.type}-${item.name}`)
+            );
+
             const oldMap = new Map(
                 state.conversations.map((item) => [`${item.type}-${item.name}`, item])
             );
 
-            state.conversations = action.payload.map((item) => {
+            const updatedIncoming = action.payload.map((item) => {
                 const key = `${item.type}-${item.name}`;
                 const existing = oldMap.get(key);
                 return {
@@ -36,6 +45,8 @@ export const chatSlice = createSlice({
                     id: key,
                 };
             });
+
+            state.conversations = [...updatedIncoming, ...existingUnlisted];
             state.isLoadingList = false;
         },
         setActiveConversation: (state, action: PayloadAction<ConversationItemType | null>) => {
