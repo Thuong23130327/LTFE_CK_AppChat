@@ -1,23 +1,45 @@
 import React, { useState } from 'react';
 import { IoSend } from 'react-icons/io5';
 import { BsEmojiSmile, BsImage } from 'react-icons/bs';
+import { ws } from '../../services/websocket';
+import { useAppSelector } from '../../hooks/useAppRedux';
+import type { ConversationItemType } from '../../types/chat';
 
 interface ChatInputProps {
-  onSendMessage: (messageText: string) => void;
+  activeConversation?: ConversationItemType | null;
+  onSendMessage?: (messageText: string) => void;
   disabled?: boolean;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
+  activeConversation: propActiveConversation,
   onSendMessage,
   disabled = false,
 }) => {
   const [text, setText] = useState<string>('');
 
+  const reduxActiveConversation = useAppSelector(
+    (state) => state.chat.activeConversation
+  );
+  const activeConversation = propActiveConversation ?? reduxActiveConversation;
+
+  // gửi tn
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = text.trim();
-    if (!trimmed || disabled) return;
-    onSendMessage(trimmed);
+    if (!trimmed || disabled || !activeConversation) return;
+
+    ws.send("SEND_CHAT", {
+      type: activeConversation.type === 1 ? "room" : "people",
+      to: activeConversation.name,
+      mes: trimmed,
+    });
+
+    if (onSendMessage) {
+      onSendMessage(trimmed);
+    }
+
+    // clear sau khi gửi
     setText('');
   };
 
@@ -58,7 +80,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          disabled={disabled}
+          disabled={disabled || !activeConversation}
         />
       </div>
 
@@ -66,7 +88,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       <button
         type="submit"
         className="chat-send-btn"
-        disabled={disabled || !text.trim()}
+        disabled={disabled || !activeConversation || !text.trim()}
         title="Gửi tin nhắn"
         aria-label="Gửi tin nhắn"
       >
@@ -75,4 +97,3 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     </form>
   );
 };
-
