@@ -6,11 +6,12 @@ import { ws } from "./services/websocket";
 import { useAppSelector } from "./hooks/useAppRedux";
 import { LoginForm } from "./components/auth/LoginForm";
 import { RegisterForm } from "./components/auth/RegisterForm";
+import { useAuthInit } from "./hooks/useAuthInit";
 
 export default function App() {
   const [isLoginView, setIsLoginView] = useState(true);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
-
+  useAuthInit();
   useEffect(() => {
     ws.connect();
   }, []);
