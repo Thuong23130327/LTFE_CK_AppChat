@@ -245,44 +245,36 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
           //chống lặp tn khi nhận
           setMessages((prev) => {
-            const isDuplicate = prev.some((m) => {
-              if (newMsg.id != null && m.id != null && m.id === newMsg.id) {
-                return true;
-              }
+            const sameIdIndex = newMsg.id != null
+              ? prev.findIndex((m) => m.id != null && m.id === newMsg.id)
+              : -1;
+            if (sameIdIndex !== -1) {
+              return prev;
+            }
 
-              if (m.name === newMsg.name && m.mes === newMsg.mes) {
-                if (m.createAt && newMsg.createAt) {
-                  const mTime = m.createAt.slice(-5);
-                  const newTime = newMsg.createAt.slice(-5);
-                  if (m.createAt === newMsg.createAt || mTime === newTime) {
-                    return true;
-                  }
-                }
-                if (m.name === activeUser) {
-                  return true;
-                }
+            if (sender === activeUser) {
+              const optimisticIndex = prev.findIndex(
+                (m) => m.name === activeUser && m.mes === newMsg.mes
+              );
+              if (optimisticIndex !== -1) {
+                const updated = [...prev];
+                updated[optimisticIndex] = {
+                  ...updated[optimisticIndex],
+                  id: newMsg.id ?? updated[optimisticIndex].id,
+                  createAt: newMsg.createAt || updated[optimisticIndex].createAt,
+                };
+                return updated;
               }
+            }
 
+            const isDuplicateByContent = prev.some((m) => {
+              if (m.name !== newMsg.name || m.mes !== newMsg.mes) return false;
+              if (m.createAt && newMsg.createAt) {
+                return m.createAt.slice(-5) === newMsg.createAt.slice(-5);
+              }
               return false;
             });
-
-            if (isDuplicate) {
-              let updatedPending = false;
-              return prev.map((m) => {
-                if (newMsg.id != null && m.id === newMsg.id) {
-                  return m;
-                }
-                if (!updatedPending && m.name === newMsg.name && m.mes === newMsg.mes) {
-                  updatedPending = true;
-                  return {
-                    ...m,
-                    id: newMsg.id ?? m.id,
-                    createAt: newMsg.createAt || m.createAt,
-                  };
-                }
-                return m;
-              });
-            }
+            if (isDuplicateByContent) return prev;
 
             return [...prev, newMsg];
           });
