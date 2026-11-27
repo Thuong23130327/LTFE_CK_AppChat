@@ -67,8 +67,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const isLoadingMoreRef = useRef<boolean>(false);
   isLoadingMoreRef.current = isLoadingMore;
 
-  // tải 50tn gần mới nhất
+  const pendingOptimisticIdsRef = useRef<Set<number>>(new Set());
+
   useEffect(() => {
+    pendingOptimisticIdsRef.current.clear();
     if (!activeConversation) {
       setMessages([]);
       setPage(1);
@@ -95,7 +97,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     }
   }, [activeConversation?.name, activeConversation?.type]);
 
-  // phân trang ngược, 50tn 1trang
   const handleLoadMore = () => {
     if (!activeConversation || !hasMoreRef.current || isLoadingMoreRef.current) {
       return;
@@ -118,7 +119,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     }
   };
 
-  // hiển thị và xử lý
   useEffect(() => {
     const handleWsMessage = (res: WsResponse) => {
       if (!activeConversation) return;
@@ -243,7 +243,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             type: activeConversation.type,
           };
 
-          //chống lặp tn khi nhận
+          //chống trùng lặp tn
           setMessages((prev) => {
             const sameIdIndex = newMsg.id != null
               ? prev.findIndex((m) => m.id != null && m.id === newMsg.id)
@@ -252,29 +252,35 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               return prev;
             }
 
+
             if (sender === activeUser) {
               const optimisticIndex = prev.findIndex(
-                (m) => m.name === activeUser && m.mes === newMsg.mes
+                (m) =>
+                  m.id != null &&
+                  pendingOptimisticIdsRef.current.has(m.id) &&
+                  m.mes === newMsg.mes
               );
               if (optimisticIndex !== -1) {
+                const tempId = prev[optimisticIndex].id!;
+                pendingOptimisticIdsRef.current.delete(tempId);
                 const updated = [...prev];
                 updated[optimisticIndex] = {
                   ...updated[optimisticIndex],
-                  id: newMsg.id ?? updated[optimisticIndex].id,
+                  id: newMsg.id ?? tempId,
                   createAt: newMsg.createAt || updated[optimisticIndex].createAt,
                 };
                 return updated;
               }
             }
 
-            const isDuplicateByContent = prev.some((m) => {
-              if (m.name !== newMsg.name || m.mes !== newMsg.mes) return false;
-              if (m.createAt && newMsg.createAt) {
-                return m.createAt.slice(-5) === newMsg.createAt.slice(-5);
-              }
-              return false;
-            });
-            if (isDuplicateByContent) return prev;
+            const isDuplicateExact = prev.some(
+              (m) =>
+                m.name === newMsg.name &&
+                m.mes === newMsg.mes &&
+                Boolean(m.createAt) &&
+                m.createAt === newMsg.createAt
+            );
+            if (isDuplicateExact) return prev;
 
             return [...prev, newMsg];
           });
@@ -298,8 +304,11 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       now.getMinutes()
     ).padStart(2, '0')}`;
 
+    const tempId = Date.now();
+    pendingOptimisticIdsRef.current.add(tempId);
+
     const newMessage: ChatMessageType = {
-      id: Date.now(),
+      id: tempId,
       name: activeUser,
       to: activeConversation.name,
       mes: text,

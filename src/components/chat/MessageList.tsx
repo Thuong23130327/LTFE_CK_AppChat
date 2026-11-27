@@ -55,7 +55,7 @@ export const MessageList: React.FC<MessageListProps> = ({
 
   useLayoutEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || messages.length === 0) return;
 
     if (isPrependingRef.current) {
       const newScrollHeight = container.scrollHeight;
@@ -64,7 +64,6 @@ export const MessageList: React.FC<MessageListProps> = ({
       container.scrollTop = prevScrollTopRef.current + delta;
       isPrependingRef.current = false;
     } else if (isInitialLoadRef.current) {
-      // hiển thị tn ngay khi mở cuộc hội thoại
       scrollToBottom('auto');
 
       const t1 = setTimeout(() => {
@@ -84,6 +83,7 @@ export const MessageList: React.FC<MessageListProps> = ({
       scrollToBottom('smooth');
     }
   }, [messages]);
+
   const handleScroll = () => {
     const container = containerRef.current;
     if (!container) return;
