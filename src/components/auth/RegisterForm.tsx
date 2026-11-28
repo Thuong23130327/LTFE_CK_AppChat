@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { ws } from "../../services/websocket";
+import type { WsResponse } from "../../types/chat";
+import "./RegisterForm.css";
 
 interface Props {
     onSwitchToLogin: () => void;
@@ -8,17 +10,21 @@ interface Props {
 export function RegisterForm({ onSwitchToLogin }: Props) {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [err, setErr] = useState("");
     const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const onMessage = (res: any) => {
+        const onMessage = (res: WsResponse) => {
             if (res.event === "REGISTER") {
                 setLoading(false);
                 if (res.status === "success") {
-                    setSuccess("Đăng ký thành công, hãy đăng nhập");
+                    setSuccess("Đăng ký thành công! Đang chuyển sang đăng nhập");
                     setErr("");
+                    setTimeout(() => {
+                        onSwitchToLogin();
+                    }, 1500);
                 } else {
                     setErr(res.mes || "Đăng ký thất bại");
                     setSuccess("");
@@ -30,63 +36,80 @@ export function RegisterForm({ onSwitchToLogin }: Props) {
         return () => {
             ws.removeMessageListener(onMessage);
         };
-    }, []);
+    }, [onSwitchToLogin]);
 
-    const handleSubmit = (e: any) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!username || !password) {
-            alert("Vui lòng nhập đầy đủ thông tin");
+
+        if (!username.trim() || !password || !confirmPassword) {
+            setErr("Vui lòng nhập đầy đủ thông tin");
+            return;
+        }
+
+        if (password.length < 6) {
+            setErr("Mật khẩu phải có ít nhất 6 ký tự");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setErr("Mật khẩu xác nhận không khớp");
             return;
         }
 
         setLoading(true);
         setErr("");
         setSuccess("");
-        ws.send("REGISTER", { user: username, pass: password });
+        ws.send("REGISTER", { user: username.trim(), pass: password });
     };
 
     return (
-        <div style={{ width: 320, margin: "100px auto", padding: 20, border: "1px solid #ddd", borderRadius: 8 }}>
-            <h2 style={{ textAlign: "center" }}>Đăng ký</h2>
+        <div className="auth-container">
+            <h2 className="auth-title">Đăng ký tài khoản</h2>
 
-            {err && <p style={{ color: "red", fontSize: 13 }}>{err}</p>}
-            {success && <p style={{ color: "green", fontSize: 13 }}>{success}</p>}
+            {err && <p className="auth-error">{err}</p>}
+            {success && <p className="auth-success">{success}</p>}
 
             <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: 12 }}>
+                <div className="form-group">
                     <label>Tên đăng nhập</label>
                     <input
                         type="text"
+                        className="form-input"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }}
                     />
                 </div>
 
-                <div style={{ marginBottom: 16 }}>
+                <div className="form-group">
                     <label>Mật khẩu</label>
                     <input
                         type="password"
+                        className="form-input"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }}
                     />
                 </div>
 
-                <button
-                    type="submit"
-                    disabled={loading}
-                    style={{ width: "100%", padding: 10, background: "#28a745", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
-                >
+                <div className="form-group">
+                    <label>Xác nhận mật khẩu</label>
+                    <input
+                        type="password"
+                        className="form-input"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                </div>
+
+                <button type="submit" disabled={loading} className="auth-button">
                     {loading ? "Đang xử lý..." : "Đăng ký"}
                 </button>
             </form>
 
-            <p style={{ marginTop: 16, textAlign: "center", fontSize: 14 }}>
+            <p className="auth-switch">
                 Đã có tài khoản?{" "}
-                <span onClick={onSwitchToLogin} style={{ color: "#0066cc", cursor: "pointer" }}>
-                    Đăng nhập ngay
-                </span>
+                <span onClick={onSwitchToLogin} className="auth-link">
+          Đăng nhập ngay
+        </span>
             </p>
         </div>
     );
