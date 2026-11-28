@@ -6,6 +6,7 @@ interface ChatState {
     activeConversation: ConversationItemType | null;
     activeRoomMembers: RoomMemberType[];
     isLoadingList: boolean;
+    roomToLeave: string | null;
 }
 
 const initialState: ChatState = {
@@ -13,6 +14,7 @@ const initialState: ChatState = {
     activeConversation: null,
     activeRoomMembers: [],
     isLoadingList: false,
+    roomToLeave: null,
 };
 
 export const chatSlice = createSlice({
@@ -42,6 +44,7 @@ export const chatSlice = createSlice({
                 return {
                     ...existing,
                     ...item,
+                    lastMessage: item.lastMessage ?? existing?.lastMessage,
                     id: key,
                 };
             });
@@ -104,11 +107,15 @@ export const chatSlice = createSlice({
                 state.activeConversation.isOnline = action.payload.isOnline;
             }
         },
+        setRoomToLeave: (state, action: PayloadAction<string | null>) => {
+            state.roomToLeave = action.payload;
+        },
         resetChatState: (state) => {
             state.conversations = [];
             state.activeConversation = null;
             state.activeRoomMembers = [];
             state.isLoadingList = false;
+            state.roomToLeave = null;
         },
     },
 });
@@ -122,6 +129,7 @@ export const {
     removeRoomConversation,
     updateUserOnlineStatus,
     resetChatState,
+    setRoomToLeave,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

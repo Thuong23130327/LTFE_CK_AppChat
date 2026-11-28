@@ -1,11 +1,12 @@
 import React from 'react';
 import { FaUser, FaUsers } from 'react-icons/fa';
-import { IoInformationCircleOutline } from 'react-icons/io5';
+import { IoInformationCircleOutline, IoExitOutline } from 'react-icons/io5';
 interface ChatHeaderProps {
   name: string;
   type?: 0 | 1; // 0 là chat cá nhân, 1 là chat nhóm
   avatar?: string;
   isOnline?: boolean;
+  onLeaveRoom?: () => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -13,6 +14,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   type = 0,
   avatar,
   isOnline = false,
+  onLeaveRoom,
 }) => {
   return (
     <header className="chat-header-bar">
@@ -48,7 +50,17 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
       </div>
 
       <div className="chat-header-actions">
-
+        {type === 1 && onLeaveRoom && (
+          <button
+            type="button"
+            className="chat-header-btn leave-btn"
+            title="Rời khỏi phòng chat này"
+            aria-label="Rời khỏi phòng chat này"
+            onClick={onLeaveRoom}
+          >
+            <IoExitOutline />
+          </button>
+        )}
         <button
           type="button"
           className="chat-header-btn"
