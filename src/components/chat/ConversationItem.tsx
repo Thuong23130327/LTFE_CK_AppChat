@@ -50,19 +50,12 @@ export const ConversationItem: React.FC<Props> = ({
                     </span>
                     {data.type === 1 && onLeaveRoom && (
                         <button
-                            title="Rời phòng"
+                            type="button"
+                            className="leave-room-btn"
+                            title="Rời khỏi phòng này"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onLeaveRoom(data.name);
-                            }}
-                            style={{
-                                marginLeft: '6px',
-                                fontSize: '11px',
-                                padding: '2px 6px',
-                                border: '1px solid #ccc',
-                                borderRadius: '4px',
-                                background: '#fff',
-                                cursor: 'pointer',
                             }}
                         >
                             Rời

@@ -37,6 +37,26 @@
 .time { font-size: 12px; color: #888; }
 .last-message { font-size: 13px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+.leave-room-btn {
+    margin-left: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border: 1px solid #fecaca;
+    border-radius: 4px;
+    background-color: #fef2f2;
+    color: #dc2626;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+}
+
+.leave-room-btn:hover {
+    background-color: #dc2626;
+    color: #ffffff;
+    border-color: #dc2626;
+}
+
 .sidebar-actions {
     display: flex;
     align-items: center;
