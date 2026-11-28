@@ -137,6 +137,15 @@
     background-color: #0073e6;
 }
 
+.chat-modal-btn-danger {
+    background-color: #dc2626;
+    color: #ffffff;
+}
+
+.chat-modal-btn-danger:hover:not(:disabled) {
+    background-color: #b91c1c;
+}
+
 @keyframes modalFadeIn {
     from {
         opacity: 0;

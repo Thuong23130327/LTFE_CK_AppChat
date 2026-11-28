@@ -139,6 +139,15 @@
   color: #111827;
 }
 
+.chat-header-btn.leave-btn {
+  color: #ef4444;
+}
+
+.chat-header-btn.leave-btn:hover {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
 /* MessageList */
 .message-list-container {
   flex: 1;

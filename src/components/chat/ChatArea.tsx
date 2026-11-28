@@ -11,7 +11,8 @@ import {
   type ConversationItemType,
   type WsResponse,
 } from '../../types/chat';
-import { useAppSelector } from '../../hooks/useAppRedux';
+import { useAppDispatch, useAppSelector } from '../../hooks/useAppRedux';
+import { setRoomToLeave, upsertConversation } from '../../store/slices/chatSlice';
 
 interface ChatAreaProps {
   activeConversation?: ConversationItemType | null;
@@ -49,6 +50,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   activeConversation: propConversation,
   currentUsername = 'Tiểu Yến',
 }) => {
+  const dispatch = useAppDispatch();
   const reduxActiveConversation = useAppSelector((state) => state.chat.activeConversation);
   const activeConversation = propConversation !== undefined ? propConversation : reduxActiveConversation;
 
@@ -317,6 +319,17 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     };
 
     setMessages((prev) => [...prev, newMessage]);
+
+    dispatch(
+      upsertConversation({
+        name: activeConversation.name,
+        type: activeConversation.type,
+        lastMessage: text,
+        actionTime: formattedLocalTime,
+        avatar: activeConversation.avatar,
+        isOnline: activeConversation.isOnline,
+      })
+    );
   };
 
   return (
@@ -327,6 +340,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         type={activeConversation.type}
         avatar={activeConversation.avatar}
         isOnline={activeConversation.isOnline}
+        onLeaveRoom={() => dispatch(setRoomToLeave(activeConversation.name))}
       />
 
       {/* MessageList */}
