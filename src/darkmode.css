@@ -116,3 +116,38 @@ body.dark .form-input {
     color: white;
     border-color: #555;
 }
+body.dark .chat-modal-container {
+    background-color: #222;
+    color: white;
+}
+
+body.dark .chat-modal-header,
+body.dark .chat-modal-footer {
+    background-color: #222;
+    border-color: #444;
+}
+
+body.dark .chat-modal-title,
+body.dark .chat-modal-label {
+    color: white;
+}
+
+body.dark .chat-modal-input {
+    background-color: #333;
+    color: white;
+    border-color: #555;
+}
+
+body.dark .chat-modal-btn-secondary {
+    background-color: #444;
+    color: white;
+}
+
+body.dark .chat-modal-close-btn {
+    color: lightgray;
+}
+
+body.dark .chat-modal-close-btn:hover {
+    background-color: #333;
+    color: white;
+}
