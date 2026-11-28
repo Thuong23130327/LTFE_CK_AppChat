@@ -76,7 +76,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <input
           type="text"
           className="chat-input-control"
-          placeholder="Nhập tin nhắn..."
+          placeholder={
+            activeConversation
+              ? `Nhắn tin tới ${activeConversation.name}...`
+              : 'Nhập tin nhắn...'
+          }
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
