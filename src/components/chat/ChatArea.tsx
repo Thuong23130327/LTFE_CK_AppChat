@@ -67,8 +67,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const isLoadingMoreRef = useRef<boolean>(false);
   isLoadingMoreRef.current = isLoadingMore;
 
-  // tải 50tn gần mới nhất
+  const pendingOptimisticIdsRef = useRef<Set<number>>(new Set());
+
   useEffect(() => {
+    pendingOptimisticIdsRef.current.clear();
     if (!activeConversation) {
       setMessages([]);
       setPage(1);
@@ -95,7 +97,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     }
   }, [activeConversation?.name, activeConversation?.type]);
 
-  // phân trang ngược, 50tn 1trang
   const handleLoadMore = () => {
     if (!activeConversation || !hasMoreRef.current || isLoadingMoreRef.current) {
       return;
@@ -118,7 +119,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     }
   };
 
-  // hiển thị và xử lý
   useEffect(() => {
     const handleWsMessage = (res: WsResponse) => {
       if (!activeConversation) return;
@@ -243,46 +243,44 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             type: activeConversation.type,
           };
 
-          //chống lặp tn khi nhận
+          //chống trùng lặp tn
           setMessages((prev) => {
-            const isDuplicate = prev.some((m) => {
-              if (newMsg.id != null && m.id != null && m.id === newMsg.id) {
-                return true;
-              }
-
-              if (m.name === newMsg.name && m.mes === newMsg.mes) {
-                if (m.createAt && newMsg.createAt) {
-                  const mTime = m.createAt.slice(-5);
-                  const newTime = newMsg.createAt.slice(-5);
-                  if (m.createAt === newMsg.createAt || mTime === newTime) {
-                    return true;
-                  }
-                }
-                if (m.name === activeUser) {
-                  return true;
-                }
-              }
-
-              return false;
-            });
-
-            if (isDuplicate) {
-              let updatedPending = false;
-              return prev.map((m) => {
-                if (newMsg.id != null && m.id === newMsg.id) {
-                  return m;
-                }
-                if (!updatedPending && m.name === newMsg.name && m.mes === newMsg.mes) {
-                  updatedPending = true;
-                  return {
-                    ...m,
-                    id: newMsg.id ?? m.id,
-                    createAt: newMsg.createAt || m.createAt,
-                  };
-                }
-                return m;
-              });
+            const sameIdIndex = newMsg.id != null
+              ? prev.findIndex((m) => m.id != null && m.id === newMsg.id)
+              : -1;
+            if (sameIdIndex !== -1) {
+              return prev;
             }
+
+
+            if (sender === activeUser) {
+              const optimisticIndex = prev.findIndex(
+                (m) =>
+                  m.id != null &&
+                  pendingOptimisticIdsRef.current.has(m.id) &&
+                  m.mes === newMsg.mes
+              );
+              if (optimisticIndex !== -1) {
+                const tempId = prev[optimisticIndex].id!;
+                pendingOptimisticIdsRef.current.delete(tempId);
+                const updated = [...prev];
+                updated[optimisticIndex] = {
+                  ...updated[optimisticIndex],
+                  id: newMsg.id ?? tempId,
+                  createAt: newMsg.createAt || updated[optimisticIndex].createAt,
+                };
+                return updated;
+              }
+            }
+
+            const isDuplicateExact = prev.some(
+              (m) =>
+                m.name === newMsg.name &&
+                m.mes === newMsg.mes &&
+                Boolean(m.createAt) &&
+                m.createAt === newMsg.createAt
+            );
+            if (isDuplicateExact) return prev;
 
             return [...prev, newMsg];
           });
@@ -306,8 +304,11 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       now.getMinutes()
     ).padStart(2, '0')}`;
 
+    const tempId = Date.now();
+    pendingOptimisticIdsRef.current.add(tempId);
+
     const newMessage: ChatMessageType = {
-      id: Date.now(),
+      id: tempId,
       name: activeUser,
       to: activeConversation.name,
       mes: text,

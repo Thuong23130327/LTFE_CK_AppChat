@@ -12,6 +12,7 @@ export interface MessageBubbleProps {
   children?: React.ReactNode;
 }
 
+// xử lý thời gian theo múi giờ VN
 export const formatDisplayTime = (rawTime?: string): string => {
   if (!rawTime) return '';
   const str = String(rawTime).trim();
