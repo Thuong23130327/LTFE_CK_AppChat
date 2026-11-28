@@ -28,23 +28,22 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             </div>
           )}
           {/* chấm tròn trạng thái trên avatar */}
-          <span
-            className={`chat-header-status-dot ${isOnline ? 'online' : ''}`}
-            title={isOnline ? 'Đang hoạt động' : 'Offline'}
-          />
+          {type === 0 && (
+              <span
+                  className={`chat-header-status-dot ${isOnline ? 'online' : ''}`}
+                  title={isOnline ? 'Đang hoạt động' : 'Offline'}
+              />
+          )}
         </div>
 
         <div className="chat-header-info">
           <div className="chat-header-name">
-            <span className="chat-header-type-icon">
-              {type === 1 ? <FaUsers /> : <FaUser />}
-            </span>
             <span>{name}</span>
           </div>
 
           {/* hiển thị trạng thái "Đang hoạt động" hoặc "Offline" */}
-          <div className={`chat-header-status ${isOnline ? 'online' : ''}`}>
-            {isOnline ? 'Đang hoạt động' : 'Offline'}
+          <div className={`chat-header-status ${type === 0 && isOnline ? 'online' : ''}`}>
+            {type === 1 ? 'Phòng chat' : isOnline ? 'Đang hoạt động' : 'Offline'}
           </div>
         </div>
       </div>

@@ -21,6 +21,10 @@ import {
 } from '../../store/slices/chatSlice';
 import {LogoutModal} from '../auth/LogoutModal';
 import {ConnectionBadge} from '../auth/ConnectionBadge';
+import { ThemeToggle } from "../auth/ThemeToggle";
+
+
+
 
 export const Sidebar: React.FC = () => {
 
@@ -202,6 +206,7 @@ export const Sidebar: React.FC = () => {
                     >
                         <IoEnterOutline/>
                     </button>
+                    <ThemeToggle />
                     <button
                         type="button"
                         className="sidebar-action-btn logout"

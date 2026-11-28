@@ -37,7 +37,6 @@ export const ConversationItem: React.FC<Props> = ({
             <div className="conversation-info">
                 <div className="conversation-header">
                     <span className="name">
-                        {data.type === 1 ? '👥 ' : '👤 '}
                         {data.name}
                     </span>
                     <span className="time">{formattedTime}</span>
