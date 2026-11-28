@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { ws } from "../../services/websocket";
 import { useAppDispatch, useAppSelector } from "../../hooks/useAppRedux";
 import { loginSuccess, loginFailure } from "../../store/slices/authSlice";
+import type { WsResponse } from "../../types/chat";
+import "./LoginForm.css";
 
 interface Props {
     onSwitchToRegister: () => void;
@@ -16,13 +18,13 @@ export function LoginForm({ onSwitchToRegister }: Props) {
     const { error } = useAppSelector((state) => state.auth);
 
     useEffect(() => {
-        const onMessage = (res: any) => {
+        const onMessage = (res: WsResponse) => {
             if (res.event === "LOGIN") {
                 setLoading(false);
                 if (res.status === "success" && res.data) {
                     dispatch(
                         loginSuccess({
-                            username: username,
+                            username: username.trim(),
                             reLoginCode: res.data.RE_LOGIN_CODE,
                         })
                     );
@@ -38,58 +40,54 @@ export function LoginForm({ onSwitchToRegister }: Props) {
         };
     }, [dispatch, username]);
 
-    const handleSubmit = (e: any) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!username || !password) {
-            alert("Vui lòng nhập đầy đủ thông tin");
+        if (!username.trim() || !password) {
+            dispatch(loginFailure("Vui lòng nhập đầy đủ thông tin"));
             return;
         }
 
         setLoading(true);
-        ws.send("LOGIN", { user: username, pass: password });
+        ws.send("LOGIN", { user: username.trim(), pass: password });
     };
 
     return (
-        <div style={{ width: 320, margin: "100px auto", padding: 20, border: "1px solid #ddd", borderRadius: 8 }}>
-            <h2 style={{ textAlign: "center" }}>Đăng nhập</h2>
+        <div className="login-container">
+            <h2 className="login-title">Đăng nhập</h2>
 
-            {error && <p style={{ color: "red", fontSize: 13 }}>{error}</p>}
+            {error && <p className="login-error">{error}</p>}
 
             <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: 12 }}>
+                <div className="login-form-group">
                     <label>Tên đăng nhập</label>
                     <input
                         type="text"
+                        className="login-input"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }}
                     />
                 </div>
 
-                <div style={{ marginBottom: 16 }}>
+                <div className="login-form-group">
                     <label>Mật khẩu</label>
                     <input
                         type="password"
+                        className="login-input"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }}
                     />
                 </div>
 
-                <button
-                    type="submit"
-                    disabled={loading}
-                    style={{ width: "100%", padding: 10, background: "#0066cc", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
-                >
+                <button type="submit" disabled={loading} className="login-button">
                     {loading ? "Đang xử lý..." : "Đăng nhập"}
                 </button>
             </form>
 
-            <p style={{ marginTop: 16, textAlign: "center", fontSize: 14 }}>
+            <p className="login-switch">
                 Chưa có tài khoản?{" "}
-                <span onClick={onSwitchToRegister} style={{ color: "#0066cc", cursor: "pointer" }}>
-                    Đăng ký
-                </span>
+                <span onClick={onSwitchToRegister} className="login-link">
+          Đăng ký
+        </span>
             </p>
         </div>
     );

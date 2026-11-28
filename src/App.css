@@ -61,4 +61,43 @@
 
 .placeholder-text {
   color: gray;
+}.mobile-back-bar {
+   display: none;
+ }
+
+.mobile-back-btn {
+  background: none;
+  border: none;
+  color: blue;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+@media (max-width: 768px) {
+  .sidebar-wrapper {
+    width: 100%;
+    border-right: none;
+  }
+
+  .chat-wrapper {
+    display: none;
+  }
+
+  .app-container.chat-open .sidebar-wrapper {
+    display: none;
+  }
+
+  .app-container.chat-open .chat-wrapper {
+    display: flex;
+    width: 100%;
+  }
+
+  .mobile-back-bar {
+    display: block;
+    padding: 8px 12px;
+    background-color: whitesmoke;
+    border-bottom: 1px solid lightgray;
+  }
 }

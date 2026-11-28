@@ -1,0 +1,118 @@
+body.dark {
+    background-color: #181818;
+    color: white;
+}
+
+body.dark .sidebar-wrapper {
+    background-color: #222;
+    border-right: 1px solid #444;
+    color: white;
+}
+
+body.dark .sidebar-header,
+body.dark .sidebar-search {
+    border-color: #444 !important;
+}
+
+body.dark .sidebar-search input {
+    background-color: #333;
+    color: white;
+    border-color: #555 !important;
+}
+
+body.dark .sidebar-action-btn {
+    background-color: #333;
+    color: white;
+    border-color: #555;
+}
+
+body.dark .sidebar-action-btn:hover {
+    background-color: #444;
+}
+
+body.dark .conversation-item:hover {
+    background-color: #333;
+}
+
+body.dark .conversation-item.active {
+    background-color: #3a3a3a;
+}
+
+body.dark .last-message,
+body.dark .time {
+    color: lightgray;
+}
+
+body.dark .chat-wrapper,
+body.dark .chat-area,
+body.dark .message-list-container,
+body.dark .chat-placeholder-container {
+    background-color: #181818;
+    color: white;
+}
+
+body.dark .chat-placeholder-title,
+body.dark .chat-header-name {
+    color: white;
+}
+
+body.dark .chat-placeholder-text,
+body.dark .message-sender-name {
+    color: lightgray;
+}
+
+body.dark .chat-header-bar,
+body.dark .chat-input-bar {
+    background-color: #222;
+    border-color: #444;
+}
+
+body.dark .chat-header-btn,
+body.dark .chat-input-tool-btn {
+    color: lightgray;
+}
+
+body.dark .chat-header-btn:hover,
+body.dark .chat-input-tool-btn:hover {
+    background-color: #333;
+    color: white;
+}
+
+body.dark .message-bubble.other {
+    background-color: #333;
+    color: white;
+}
+
+body.dark .chat-input-field-wrapper {
+    background-color: #333;
+    border-color: #555;
+}
+
+body.dark .chat-input-control {
+    color: white;
+}
+
+body.dark .mobile-back-bar {
+    background-color: #222;
+    border-color: #444;
+}
+
+body.dark .login-container,
+body.dark .auth-container,
+body.dark .logout-modal-content {
+    background-color: #222;
+    color: white;
+    border-color: #444;
+}
+
+body.dark .login-form-group label,
+body.dark .form-group label {
+    color: white;
+}
+
+body.dark .login-input,
+body.dark .form-input {
+    background-color: #333;
+    color: white;
+    border-color: #555;
+}
