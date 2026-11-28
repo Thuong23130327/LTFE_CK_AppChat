@@ -1,11 +1,6 @@
 import React from 'react';
 import { FaUser, FaUsers } from 'react-icons/fa';
-import {
-  IoCallOutline,
-  IoVideocamOutline,
-  IoInformationCircleOutline,
-} from 'react-icons/io5';
-
+import { IoInformationCircleOutline } from 'react-icons/io5';
 interface ChatHeaderProps {
   name: string;
   type?: 0 | 1; // 0 là chat cá nhân, 1 là chat nhóm
@@ -53,22 +48,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
       </div>
 
       <div className="chat-header-actions">
-        <button
-          type="button"
-          className="chat-header-btn"
-          title="Gọi thoại"
-          aria-label="Gọi thoại"
-        >
-          <IoCallOutline />
-        </button>
-        <button
-          type="button"
-          className="chat-header-btn"
-          title="Gọi video"
-          aria-label="Gọi video"
-        >
-          <IoVideocamOutline />
-        </button>
+
         <button
           type="button"
           className="chat-header-btn"
