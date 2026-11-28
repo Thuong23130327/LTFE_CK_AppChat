@@ -24,9 +24,11 @@ export const ConversationItem: React.FC<Props> = ({
         ? data.actionTime.split(' ')[1].slice(0, 5)
         : data.actionTime;
 
+    const hasUnread = Boolean(data.unreadCount && data.unreadCount > 0);
+
     return (
         <div
-            className={`conversation-item ${isActive ? 'active' : ''}`}
+            className={`conversation-item ${isActive ? 'active' : ''} ${hasUnread ? 'has-unread' : ''}`}
             onClick={onClick}
         >
             <div className="avatar-container">
@@ -36,31 +38,41 @@ export const ConversationItem: React.FC<Props> = ({
 
             <div className="conversation-info">
                 <div className="conversation-header">
-                    <span className="name">
+                    <span className={`name ${hasUnread ? 'unread-name' : ''}`}>
                         {data.name}
                     </span>
-                    <span className="time">{formattedTime}</span>
+                    <span className={`time ${hasUnread ? 'unread-time' : ''}`}>{formattedTime}</span>
                 </div>
                 <div
                     className="last-message"
                     style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                 >
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span
+                        className={`last-message-text ${hasUnread ? 'unread-message' : ''}`}
+                        style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}
+                    >
                         {messagePreview}
                     </span>
-                    {data.type === 1 && onLeaveRoom && (
-                        <button
-                            type="button"
-                            className="leave-room-btn"
-                            title="Rời khỏi phòng này"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onLeaveRoom(data.name);
-                            }}
-                        >
-                            Rời
-                        </button>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '6px', flexShrink: 0 }}>
+                        {hasUnread && (
+                            <span className="unread-badge">
+                                {data.unreadCount! > 99 ? '99+' : data.unreadCount}
+                            </span>
+                        )}
+                        {data.type === 1 && onLeaveRoom && (
+                            <button
+                                type="button"
+                                className="leave-room-btn"
+                                title="Rời khỏi phòng này"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onLeaveRoom(data.name);
+                                }}
+                            >
+                                Rời
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

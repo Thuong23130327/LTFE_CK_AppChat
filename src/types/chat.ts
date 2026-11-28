@@ -31,6 +31,7 @@ export interface ConversationItemType {
     avatar?: string;
     lastMessage?: string;
     isOnline?: boolean;
+    unreadCount?: number;
 }
 
 export interface RoomMemberType {

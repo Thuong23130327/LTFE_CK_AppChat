@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './Sidebar.css';
-import {IoPersonAddOutline, IoEnterOutline, IoLogOutOutline} from 'react-icons/io5';
+import {IoPersonAddOutline, IoEnterOutline, IoLogOutOutline, IoAddCircleOutline} from 'react-icons/io5';
 import {ConversationItem} from './ConversationItem';
 import {DirectChatModal} from './DirectChatModal';
 import {JoinRoomModal} from './JoinRoomModal';
 import {LeaveRoomModal} from './LeaveRoomModal';
+import {CreateRoomModal} from './CreateRoomModal';
 import {ws} from '../../services/websocket';
 import {WS_EVENTS, type ConversationItemType, type WsResponse} from '../../types/chat';
 import {useAppDispatch, useAppSelector} from '../../hooks/useAppRedux';
@@ -23,6 +24,8 @@ import { LogoutModal } from '../auth/LogoutModal';
 import { ConnectionBadge } from '../auth/ConnectionBadge';
 import { ThemeToggle } from "../auth/ThemeToggle";
 
+type FilterTab = 'all' | 'direct' | 'group' | 'unread';
+
 
 
 
@@ -38,7 +41,9 @@ export const Sidebar: React.FC = () => {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [isDirectChatModalOpen, setIsDirectChatModalOpen] = useState(false);
     const [isJoinRoomModalOpen, setIsJoinRoomModalOpen] = useState(false);
+    const [isCreateRoomModalOpen, setIsCreateRoomModalOpen] = useState(false);
     const [isLeavingRoom, setIsLeavingRoom] = useState(false);
+    const [activeTab, setActiveTab] = useState<FilterTab>('all');
     const checkQueueRef = useRef<string[]>([]);
     const pendingLeaveRoomRef = useRef<string>('');
 
@@ -110,13 +115,27 @@ export const Sidebar: React.FC = () => {
                                 ? (msg.createAt.includes(' ') ? msg.createAt.split(' ')[1].slice(0, 5) : msg.createAt.slice(0, 5))
                                 : `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
+                            const convType: 0 | 1 = isRoom ? 1 : 0;
+                            const isFromMe = msg.name === username;
+                            const isCurrentlyActive =
+                                activeConversation?.name === convName &&
+                                activeConversation?.type === convType;
+
+                            // Lấy unreadCount hiện tại từ conversations (closure không cập nhật được nên dùng thêm biến)
+                            // unreadCount sẽ được xử lý trong upsertConversation dựa vào payload
+                            const shouldIncrement = !isFromMe && !isCurrentlyActive;
+
                             dispatch(
                                 upsertConversation({
                                     name: convName,
-                                    type: isRoom ? 1 : 0,
+                                    type: convType,
                                     lastMessage: msg.mes || msg.message,
                                     actionTime: formattedTime,
-                                })
+                                    // Truyền undefined để upsertConversation tự giữ unreadCount cũ nếu isFromMe
+                                    // Truyền -1 như signal "increment" - sẽ handle ở reducer
+                                    unreadCount: shouldIncrement ? undefined : 0,
+                                    _incrementUnread: shouldIncrement,
+                                } as any)
                             );
                         }
                     }
@@ -152,9 +171,16 @@ export const Sidebar: React.FC = () => {
 
         return () => clearInterval(timer);
     }, [activeConversation?.name, activeConversation?.type]);
-    const filteredConversations = conversations.filter((conv) =>
-        conv.name.toLowerCase().includes(searchTerm.trim().toLowerCase())
-    );
+    const totalUnread = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+
+    const filteredConversations = conversations.filter((conv) => {
+        const matchSearch = conv.name.toLowerCase().includes(searchTerm.trim().toLowerCase());
+        if (!matchSearch) return false;
+        if (activeTab === 'direct') return conv.type === 0;
+        if (activeTab === 'group') return conv.type === 1;
+        if (activeTab === 'unread') return Boolean(conv.unreadCount && conv.unreadCount > 0);
+        return true; // 'all'
+    });
 
     const handleLogout = () => {
         ws.send(WS_EVENTS.LOGOUT);
@@ -206,6 +232,15 @@ export const Sidebar: React.FC = () => {
                     >
                         <IoEnterOutline />
                     </button>
+                    <button
+                        type="button"
+                        className="sidebar-action-btn"
+                        title="Tạo phòng mới"
+                        onClick={() => setIsCreateRoomModalOpen(true)}
+                        aria-label="Tạo phòng mới"
+                    >
+                        <IoAddCircleOutline />
+                    </button>
                     <ThemeToggle />
                     <button
                         type="button"
@@ -236,6 +271,32 @@ export const Sidebar: React.FC = () => {
                         boxSizing: 'border-box',
                     }}
                 />
+            </div>
+
+            {/* Bộ lọc nhanh */}
+            <div className="sidebar-filter-tabs">
+                {(['all', 'direct', 'group', 'unread'] as FilterTab[]).map((tab) => {
+                    const labels: Record<FilterTab, string> = {
+                        all: 'Tất cả',
+                        direct: 'Cá nhân',
+                        group: 'Nhóm',
+                        unread: 'Chưa đọc',
+                    };
+                    return (
+                        <button
+                            key={tab}
+                            className={`sidebar-filter-tab ${activeTab === tab ? 'active' : ''}`}
+                            onClick={() => setActiveTab(tab)}
+                        >
+                            {labels[tab]}
+                            {tab === 'unread' && totalUnread > 0 && (
+                                <span className="filter-unread-badge">
+                                    {totalUnread > 99 ? '99+' : totalUnread}
+                                </span>
+                            )}
+                        </button>
+                    );
+                })}
             </div>
 
             {/* danh sách cuộc trò chuyện */}
@@ -290,6 +351,10 @@ export const Sidebar: React.FC = () => {
             <JoinRoomModal
                 isOpen={isJoinRoomModalOpen}
                 onClose={() => setIsJoinRoomModalOpen(false)}
+            />
+            <CreateRoomModal
+                isOpen={isCreateRoomModalOpen}
+                onClose={() => setIsCreateRoomModalOpen(false)}
             />
             <LeaveRoomModal
                 isOpen={Boolean(roomToLeave)}

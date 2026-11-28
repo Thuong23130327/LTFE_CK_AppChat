@@ -37,6 +37,41 @@
 .time { font-size: 12px; color: #888; }
 .last-message { font-size: 13px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+/* Unread styles */
+.conversation-item.has-unread {
+    background-color: #f0f7ff;
+}
+.conversation-item.has-unread:hover {
+    background-color: #e1f0ff;
+}
+.unread-name {
+    font-weight: 700 !important;
+    color: #111827 !important;
+}
+.unread-time {
+    color: #0084ff !important;
+    font-weight: 600 !important;
+}
+.unread-message {
+    font-weight: 600 !important;
+    color: #1f2937 !important;
+}
+.unread-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background-color: #0084ff;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
 .leave-room-btn {
     margin-left: 8px;
     font-size: 11px;
@@ -88,4 +123,69 @@
     background-color: #fef2f2;
     color: #dc2626;
     border-color: #fca5a5;
+}
+
+/* Bộ lọc nhanh */
+.sidebar-filter-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e5e7eb;
+    background-color: inherit;
+    flex-shrink: 0;
+    overflow-x: auto;
+}
+
+.sidebar-filter-tabs::-webkit-scrollbar {
+    height: 0;
+}
+
+.sidebar-filter-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid #d1d5db;
+    background-color: #f9fafb;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.sidebar-filter-tab:hover {
+    background-color: #e5e7eb;
+    color: #374151;
+    border-color: #9ca3af;
+}
+
+.sidebar-filter-tab.active {
+    background-color: #0084ff;
+    color: #ffffff;
+    border-color: #0084ff;
+    font-weight: 600;
+}
+
+.filter-unread-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background-color: #ef4444;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.sidebar-filter-tab.active .filter-unread-badge {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
 }
