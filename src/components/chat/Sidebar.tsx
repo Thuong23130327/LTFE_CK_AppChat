@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './Sidebar.css';
-import { IoPersonAddOutline, IoEnterOutline, IoLogOutOutline } from 'react-icons/io5';
-import { ConversationItem } from './ConversationItem';
-import { DirectChatModal } from './DirectChatModal';
-import { JoinRoomModal } from './JoinRoomModal';
-import { ws } from '../../services/websocket';
-import { WS_EVENTS, type ConversationItemType, type WsResponse } from '../../types/chat';
-import { useAppDispatch, useAppSelector } from '../../hooks/useAppRedux';
-import { logout } from '../../store/slices/authSlice';
+import {IoPersonAddOutline, IoEnterOutline, IoLogOutOutline} from 'react-icons/io5';
+import {ConversationItem} from './ConversationItem';
+import {DirectChatModal} from './DirectChatModal';
+import {JoinRoomModal} from './JoinRoomModal';
+import {LeaveRoomModal} from './LeaveRoomModal';
+import {ws} from '../../services/websocket';
+import {WS_EVENTS, type ConversationItemType, type WsResponse} from '../../types/chat';
+import {useAppDispatch, useAppSelector} from '../../hooks/useAppRedux';
+import {logout} from '../../store/slices/authSlice';
 import {
     resetChatState,
     setActiveConversation,
@@ -15,6 +16,8 @@ import {
     setLoadingList,
     updateUserOnlineStatus,
     upsertConversation,
+    removeRoomConversation,
+    setRoomToLeave,
 } from '../../store/slices/chatSlice';
 import { LogoutModal } from '../auth/LogoutModal';
 import { ConnectionBadge } from '../auth/ConnectionBadge';
@@ -26,8 +29,8 @@ import { ThemeToggle } from "../auth/ThemeToggle";
 export const Sidebar: React.FC = () => {
 
     const dispatch = useAppDispatch();
-    const { username, isAuthenticated } = useAppSelector((state) => state.auth);
-    const { conversations, activeConversation, isLoadingList } = useAppSelector(
+    const {username, isAuthenticated} = useAppSelector((state) => state.auth);
+    const {conversations, activeConversation, isLoadingList, roomToLeave} = useAppSelector(
         (state) => state.chat
     );
 
@@ -35,7 +38,9 @@ export const Sidebar: React.FC = () => {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [isDirectChatModalOpen, setIsDirectChatModalOpen] = useState(false);
     const [isJoinRoomModalOpen, setIsJoinRoomModalOpen] = useState(false);
+    const [isLeavingRoom, setIsLeavingRoom] = useState(false);
     const checkQueueRef = useRef<string[]>([]);
+    const pendingLeaveRoomRef = useRef<string>('');
 
     const checkUserOnline = (targetUser: string) => {
         checkQueueRef.current.push(targetUser);
@@ -92,25 +97,44 @@ export const Sidebar: React.FC = () => {
                 case WS_EVENTS.SEND_CHAT: {
                     if (res.status === 'success' && res.data) {
                         const msg = res.data;
-                        const isRoom = msg.type === 1;
+                        const isRoom = msg.type === 1 || msg.type === '1' || msg.type === 'room';
                         const convName = isRoom
-                            ? msg.to
+                            ? (msg.to || msg.room || msg.roomName)
                             : msg.name === username
                                 ? msg.to
                                 : msg.name;
 
                         if (convName) {
+                            const now = new Date();
+                            const formattedTime = msg.createAt
+                                ? (msg.createAt.includes(' ') ? msg.createAt.split(' ')[1].slice(0, 5) : msg.createAt.slice(0, 5))
+                                : `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
                             dispatch(
                                 upsertConversation({
                                     name: convName,
                                     type: isRoom ? 1 : 0,
-                                    lastMessage: msg.mes,
-                                    actionTime:
-                                        msg.createAt || new Date().toTimeString().slice(0, 5),
+                                    lastMessage: msg.mes || msg.message,
+                                    actionTime: formattedTime,
                                 })
                             );
                         }
                     }
+                    break;
+                }
+
+                case WS_EVENTS.OUT_ROOM: {
+                    const targetRoom = pendingLeaveRoomRef.current;
+                    setIsLeavingRoom(false);
+                    if (res.status === 'success') {
+                        if (targetRoom) {
+                            dispatch(removeRoomConversation(targetRoom));
+                        }
+                        ws.send(WS_EVENTS.GET_USER_LIST);
+                    } else {
+                        alert(res.mes || 'Không thể rời phòng chat');
+                    }
+                    pendingLeaveRoomRef.current = '';
                     break;
                 }
             }
@@ -136,6 +160,13 @@ export const Sidebar: React.FC = () => {
         ws.send(WS_EVENTS.LOGOUT);
         dispatch(logout());
         dispatch(resetChatState());
+    };
+
+    const handleConfirmLeaveRoom = (targetRoomName: string) => {
+        setIsLeavingRoom(true);
+        pendingLeaveRoomRef.current = targetRoomName;
+        ws.send(WS_EVENTS.OUT_ROOM, { name: targetRoomName });
+        dispatch(setRoomToLeave(null));
     };
 
     const displayName = username || 'Khách';
@@ -236,6 +267,7 @@ export const Sidebar: React.FC = () => {
                                             checkUserOnline(conv.name);
                                         }
                                     }}
+                                    onLeaveRoom={(roomName) => dispatch(setRoomToLeave(roomName))}
                                 />
                             );
                         })}
@@ -258,7 +290,13 @@ export const Sidebar: React.FC = () => {
             <JoinRoomModal
                 isOpen={isJoinRoomModalOpen}
                 onClose={() => setIsJoinRoomModalOpen(false)}
-
+            />
+            <LeaveRoomModal
+                isOpen={Boolean(roomToLeave)}
+                roomName={roomToLeave || ''}
+                isLoading={isLeavingRoom}
+                onClose={() => dispatch(setRoomToLeave(null))}
+                onConfirm={handleConfirmLeaveRoom}
             />
         </div>
     );
