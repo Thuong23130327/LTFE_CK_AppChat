@@ -7,6 +7,8 @@ interface ChatHeaderProps {
   avatar?: string;
   isOnline?: boolean;
   onLeaveRoom?: () => void;
+  isInfoOpen?: boolean;
+  onToggleInfo?: () => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -15,6 +17,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   avatar,
   isOnline = false,
   onLeaveRoom,
+  isInfoOpen = false,
+  onToggleInfo,
 }) => {
   return (
     <header className="chat-header-bar">
@@ -62,9 +66,11 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         )}
         <button
           type="button"
-          className="chat-header-btn"
+          className={`chat-header-btn ${isInfoOpen ? 'active' : ''}`}
           title="Thông tin cuộc trò chuyện"
           aria-label="Thông tin cuộc trò chuyện"
+          aria-expanded={isInfoOpen}
+          onClick={onToggleInfo}
         >
           <IoInformationCircleOutline />
         </button>

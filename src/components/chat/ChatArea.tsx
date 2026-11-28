@@ -12,7 +12,9 @@ import {
   type WsResponse,
 } from '../../types/chat';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppRedux';
-import { setRoomToLeave, upsertConversation } from '../../store/slices/chatSlice';
+import { setActiveRoomMembers, setRoomToLeave, upsertConversation } from '../../store/slices/chatSlice';
+import { IoClose } from 'react-icons/io5';
+import { FaUser, FaUsers } from 'react-icons/fa';
 
 interface ChatAreaProps {
   activeConversation?: ConversationItemType | null;
@@ -56,11 +58,13 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
   const authUsername = useAppSelector((state) => state.auth.username);
   const activeUser = authUsername || currentUsername;
+  const activeRoomMembers = useAppSelector((state) => state.chat.activeRoomMembers);
 
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [page, setPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
 
   const pageRef = useRef<number>(1);
   pageRef.current = page;
@@ -73,6 +77,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
   useEffect(() => {
     pendingOptimisticIdsRef.current.clear();
+    setIsInfoOpen(false);
     if (!activeConversation) {
       setMessages([]);
       setPage(1);
@@ -137,6 +142,22 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
         if (res.status === 'success') {
           console.log(`[WS] ${res.event} response:`, res);
+
+          // danh sách thành viên trong phòng chat
+          if (res.event === WS_EVENTS.GET_ROOM_CHAT_MES && res.data) {
+            const rawMembers = res.data.userList || res.data.users || res.data.members;
+            if (Array.isArray(rawMembers)) {
+              const normalizedMembers = rawMembers
+                .map((m: any, idx: number) =>
+                  typeof m === 'string'
+                    ? { id: idx, name: m }
+                    : { id: m.id ?? idx, name: m.name || m.user || '' }
+                )
+                .filter((m) => m.name);
+              dispatch(setActiveRoomMembers(normalizedMembers));
+            }
+          }
+
           let rawList: any[] = [];
           if (Array.isArray(res.data)) {
             rawList = res.data;
@@ -341,6 +362,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         avatar={activeConversation.avatar}
         isOnline={activeConversation.isOnline}
         onLeaveRoom={() => dispatch(setRoomToLeave(activeConversation.name))}
+        isInfoOpen={isInfoOpen}
+        onToggleInfo={() => setIsInfoOpen((prev) => !prev)}
       />
 
       {/* MessageList */}
@@ -358,6 +381,83 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         activeConversation={activeConversation}
         onSendMessage={handleSendMessage}
       />
+
+      {/* thông tin đoạn chat & ds tv trong phòng chat */}
+      {isInfoOpen && (
+        <>
+          <div
+            className="chat-info-backdrop"
+            onClick={() => setIsInfoOpen(false)}
+          />
+          <aside className="chat-info-drawer" aria-label="Thông tin đoạn chat">
+            <div className="chat-info-header">
+              <h4>Thông tin đoạn chat</h4>
+              <button
+                type="button"
+                className="chat-info-close-btn"
+                onClick={() => setIsInfoOpen(false)}
+                aria-label="Đóng thông tin"
+              >
+                <IoClose />
+              </button>
+            </div>
+
+            <div className="chat-info-profile">
+              {activeConversation.avatar ? (
+                <img
+                  src={activeConversation.avatar}
+                  alt={activeConversation.name}
+                  className="chat-info-avatar"
+                />
+              ) : (
+                <div className="chat-info-avatar-fallback">
+                  {activeConversation.type === 1 ? <FaUsers /> : <FaUser />}
+                </div>
+              )}
+              <div className="chat-info-name">{activeConversation.name}</div>
+              <div className="chat-info-subtitle">
+                {activeConversation.type === 1
+                  ? `Nhóm chat • ${activeRoomMembers.length} thành viên`
+                  : activeConversation.isOnline
+                    ? 'Đang hoạt động'
+                    : 'Offline'}
+              </div>
+            </div>
+
+            {activeConversation.type === 1 && (
+              <div className="chat-info-section">
+                <div className="chat-info-section-title">
+                  Thành viên phòng ({activeRoomMembers.length})
+                </div>
+                {activeRoomMembers.length === 0 ? (
+                  <p className="chat-info-empty">
+                    Chưa có danh sách thành viên.
+                  </p>
+                ) : (
+                  <ul className="chat-info-member-list">
+                    {activeRoomMembers.map((member) => (
+                      <li
+                        key={`${member.id}-${member.name}`}
+                        className="chat-info-member-item"
+                      >
+                        <div className="chat-info-member-avatar">
+                          <FaUser />
+                        </div>
+                        <span className="chat-info-member-name">
+                          {member.name}
+                          {member.name === activeUser && (
+                            <span className="chat-info-member-you"> (Bạn)</span>
+                          )}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </aside>
+        </>
+      )}
     </section>
   );
 };
