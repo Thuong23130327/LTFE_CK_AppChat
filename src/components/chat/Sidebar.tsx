@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import './Sidebar.css';
-import { IoPersonAddOutline, IoEnterOutline, IoLogOutOutline } from 'react-icons/io5';
-import { ConversationItem } from './ConversationItem';
-import { DirectChatModal } from './DirectChatModal';
-import { JoinRoomModal } from './JoinRoomModal';
-import { ws } from '../../services/websocket';
-import { WS_EVENTS, type ConversationItemType, type WsResponse } from '../../types/chat';
-import { useAppDispatch, useAppSelector } from '../../hooks/useAppRedux';
-import { logout } from '../../store/slices/authSlice';
+import {IoPersonAddOutline, IoEnterOutline, IoLogOutOutline} from 'react-icons/io5';
+import {ConversationItem} from './ConversationItem';
+import {DirectChatModal} from './DirectChatModal';
+import {JoinRoomModal} from './JoinRoomModal';
+import {ws} from '../../services/websocket';
+import {WS_EVENTS, type ConversationItemType, type WsResponse} from '../../types/chat';
+import {useAppDispatch, useAppSelector} from '../../hooks/useAppRedux';
+import {logout} from '../../store/slices/authSlice';
 import {
     resetChatState,
     setActiveConversation,
@@ -16,20 +16,27 @@ import {
     updateUserOnlineStatus,
     upsertConversation,
 } from '../../store/slices/chatSlice';
-import { LogoutModal } from '../auth/LogoutModal';
+import {LogoutModal} from '../auth/LogoutModal';
+import {ConnectionBadge} from '../auth/ConnectionBadge';
+
 export const Sidebar: React.FC = () => {
 
     const dispatch = useAppDispatch();
-    const { username, isAuthenticated } = useAppSelector((state) => state.auth);
-    const { conversations, activeConversation, isLoadingList } = useAppSelector(
+    const {username, isAuthenticated} = useAppSelector((state) => state.auth);
+    const {conversations, activeConversation, isLoadingList} = useAppSelector(
         (state) => state.chat
     );
 
     const [searchTerm, setSearchTerm] = useState('');
     const [showLogoutModal, setShowLogoutModal] = useState(false);
-     const [isDirectChatModalOpen, setIsDirectChatModalOpen] = useState(false);
+    const [isDirectChatModalOpen, setIsDirectChatModalOpen] = useState(false);
     const [isJoinRoomModalOpen, setIsJoinRoomModalOpen] = useState(false);
+    const checkQueueRef = useRef<string[]>([]);
 
+    const checkUserOnline = (targetUser: string) => {
+        checkQueueRef.current.push(targetUser);
+        ws.send(WS_EVENTS.CHECK_USER_ONLINE, {user: targetUser});
+    };
     useEffect(() => {
         if (isAuthenticated) {
             dispatch(setLoadingList(true));
@@ -56,7 +63,7 @@ export const Sidebar: React.FC = () => {
 
                         list.forEach((item) => {
                             if (item.type === 0) {
-                                ws.send(WS_EVENTS.CHECK_USER_ONLINE, { user: item.name });
+                                checkUserOnline(item.name);
                             }
                         });
                     } else {
@@ -66,10 +73,11 @@ export const Sidebar: React.FC = () => {
                 }
 
                 case WS_EVENTS.CHECK_USER_ONLINE: {
-                    if (res.status === 'success' && res.data && typeof res.data.user === 'string') {
+                    const targetUser = checkQueueRef.current.shift();
+                    if (res.status === 'success' && res.data && targetUser) {
                         dispatch(
                             updateUserOnlineStatus({
-                                name: res.data.user,
+                                name: targetUser,
                                 isOnline: Boolean(res.data.status),
                             })
                         );
@@ -107,7 +115,15 @@ export const Sidebar: React.FC = () => {
         ws.addMessageListener(handleWsMessage);
         return () => ws.removeMessageListener(handleWsMessage);
     }, [dispatch, username]);
+    useEffect(() => {
+        if (!activeConversation || activeConversation.type !== 0) return;
 
+        const timer = setInterval(() => {
+            checkUserOnline(activeConversation.name);
+        }, 10000);
+
+        return () => clearInterval(timer);
+    }, [activeConversation?.name, activeConversation?.type]);
     const filteredConversations = conversations.filter((conv) =>
         conv.name.toLowerCase().includes(searchTerm.trim().toLowerCase())
     );
@@ -121,17 +137,20 @@ export const Sidebar: React.FC = () => {
     const displayName = username || 'Khách';
     const myAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0D8ABC&color=fff`;
 
+    let style = {fontWeight: 600};
     return (
         <div className="sidebar-wrapper">
             <div
                 className="sidebar-header"
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-            >
-                <div className="current-user" style={{ display: 'flex', alignItems: 'center' }}>
-                    <img src={myAvatar} alt="My Avatar" className="avatar-small" />
-                    <span className="username" style={{ marginLeft: '8px', fontWeight: 600 }}>
-                        {displayName}
-                    </span>
+                style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                <div className="current-user" style={{display: 'flex', alignItems: 'center'}}>
+                    <img src={myAvatar} alt="My Avatar" className="avatar-small"/>
+                    <div style={{marginLeft: '8px', display: 'flex', flexDirection: 'column', gap: '2px'}}>
+        <span className="username" style={style}>
+            {displayName}
+        </span>
+                        <ConnectionBadge/>
+                    </div>
                 </div>
                 <div className="sidebar-actions">
                     <button
@@ -141,7 +160,7 @@ export const Sidebar: React.FC = () => {
                         onClick={() => setIsDirectChatModalOpen(true)}
                         aria-label="Bắt đầu chat 1-1"
                     >
-                        <IoPersonAddOutline />
+                        <IoPersonAddOutline/>
                     </button>
                     <button
                         type="button"
@@ -150,7 +169,7 @@ export const Sidebar: React.FC = () => {
                         onClick={() => setIsJoinRoomModalOpen(true)}
                         aria-label="Tham gia phòng"
                     >
-                        <IoEnterOutline />
+                        <IoEnterOutline/>
                     </button>
                     <button
                         type="button"
@@ -159,14 +178,14 @@ export const Sidebar: React.FC = () => {
                         onClick={() => setShowLogoutModal(true)}
                         aria-label="Đăng xuất"
                     >
-                        <IoLogOutOutline />
+                        <IoLogOutOutline/>
 
                     </button>
                 </div>
             </div>
 
             {/* thanh tìm kiếm hội thoại hiện có trong danh sách */}
-            <div className="sidebar-search" style={{ padding: '12px 16px', borderBottom: '1px solid #ddd' }}>
+            <div className="sidebar-search" style={{padding: '12px 16px', borderBottom: '1px solid #ddd'}}>
                 <input
                     type="text"
                     value={searchTerm}
@@ -184,13 +203,13 @@ export const Sidebar: React.FC = () => {
             </div>
 
             {/* danh sách cuộc trò chuyện */}
-            <div className="sidebar-content" style={{ padding: 0 }}>
+            <div className="sidebar-content" style={{padding: 0}}>
                 {isLoadingList && conversations.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: '#888', padding: '16px' }}>
+                    <p style={{textAlign: 'center', color: '#888', padding: '16px'}}>
                         Đang tải danh sách trò chuyện...
                     </p>
                 ) : filteredConversations.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: '#888', padding: '16px', fontSize: '14px' }}>
+                    <p style={{textAlign: 'center', color: '#888', padding: '16px', fontSize: '14px'}}>
                         Chưa có cuộc trò chuyện nào
                     </p>
                 ) : (
@@ -206,7 +225,12 @@ export const Sidebar: React.FC = () => {
                                     key={key}
                                     data={conv}
                                     isActive={isActive}
-                                    onClick={() => dispatch(setActiveConversation(conv))}
+                                    onClick={() => {
+                                        dispatch(setActiveConversation(conv));
+                                        if (conv.type === 0) {
+                                            checkUserOnline(conv.name);
+                                        }
+                                    }}
                                 />
                             );
                         })}
@@ -219,7 +243,7 @@ export const Sidebar: React.FC = () => {
                 onConfirm={() => {
                     setShowLogoutModal(false);
                     handleLogout();
-                }}  />
+                }}/>
 
 
             <DirectChatModal
