@@ -19,7 +19,7 @@ function LoadingScreen() {
     return (
         <div style={{ display: "flex", height: "300px", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
             <h3>Đang kết nối...</h3>
-            <p style={{ color: "black", fontSize: 14 }}>Vui lòng đợi trong giây lát</p>
+            <p style={{ color: "gray", fontSize: 14 }}>Vui lòng đợi trong giây lát</p>
         </div>
     );
 }
@@ -31,11 +31,12 @@ export default function App() {
     const { activeConversation } = useAppSelector((state) => state.chat);
 
     useAuthInit();
-
     useEffect(() => {
+        if (localStorage.getItem("darkMode") === "true") {
+            document.body.classList.add("dark");
+        }
         ws.connect();
     }, []);
-
     if (isCheckingAuth) {
         return <LoadingScreen />;
     }
